@@ -15,7 +15,7 @@ class FacturacionController extends Controller
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
-          CURLOPT_URL => 'https://test3.wonduu.com/api/orders',
+          CURLOPT_URL => 'https://www.wonduu.com/api/orders',
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -55,7 +55,7 @@ class FacturacionController extends Controller
             </prestashop>',
           CURLOPT_HTTPHEADER => array(
             'Content-Type: text/xml',
-            'Authorization: Basic V05CR1lBWEpWRExTQjVTS1dXNjhURkNRWEJEN0ZRWjE6:'
+            'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A'
           ),
         ));
 
@@ -65,8 +65,8 @@ class FacturacionController extends Controller
 
         try {
             
-            $webService = new PrestaShopWebservice('https://test3.wonduu.com', 'WNBGYAXJVDLSB5SKWW68TFCQXBD7FQZ1', false);
-            $xml = $webService->get(['url' => 'https://test3.wonduu.com/api/order_histories?schema=blank']);
+            $webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
+            $xml = $webService->get(['url' => 'https://www.wonduu.com/api/order_histories?schema=blank']);
 
         } catch (PrestaShopWebserviceException $ex) {
 
@@ -78,7 +78,7 @@ class FacturacionController extends Controller
         $curl2 = curl_init();
 
         curl_setopt_array($curl2, array(
-          CURLOPT_URL => 'https://test3.wonduu.com/api/orders?filter[id_cart]=' . strval($request->id_carrito) . '&display=[id]&output_format=JSON',
+          CURLOPT_URL => 'https://www.wonduu.com/api/orders?filter[id_cart]=' . strval($request->id_carrito) . '&display=[id]&output_format=JSON',
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -88,7 +88,7 @@ class FacturacionController extends Controller
           CURLOPT_CUSTOMREQUEST => 'GET',
           CURLOPT_HTTPHEADER => array(
             'Content-Type: text/xml',
-            'Authorization: Basic V05CR1lBWEpWRExTQjVTS1dXNjhURkNRWEJEN0ZRWjE6:'
+            'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A'
           ),
         ));
 
@@ -141,7 +141,7 @@ class FacturacionController extends Controller
       $curl = curl_init();
 
         curl_setopt_array($curl, array(
-          CURLOPT_URL => 'https://test3.wonduu.com/api/orders?filter[id_customer]=' . strval($request->id) . '&display=[id,reference,payment,total_paid]&output_format=JSON',
+          CURLOPT_URL => 'https://www.wonduu.com/api/orders?filter[id_customer]=' . strval($request->id) . '&display=[id,reference,payment,total_paid]&output_format=JSON',
           CURLOPT_RETURNTRANSFER => true,
           CURLOPT_ENCODING => '',
           CURLOPT_MAXREDIRS => 10,
@@ -151,7 +151,7 @@ class FacturacionController extends Controller
           CURLOPT_CUSTOMREQUEST => 'GET',
           CURLOPT_HTTPHEADER => array(
             'Content-Type: text/xml',
-            'Authorization: Basic V05CR1lBWEpWRExTQjVTS1dXNjhURkNRWEJEN0ZRWjE6:'
+            'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A'
           ),
         ));
 

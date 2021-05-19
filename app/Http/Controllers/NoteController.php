@@ -18,7 +18,7 @@ class NoteController extends Controller
 		$curl = curl_init();
 
 		curl_setopt_array($curl, array(
-		  CURLOPT_URL => 'https://test3.wonduu.com/api/customers?filter[email]=' . $correo . '&display=full&output_format=JSON',
+		  CURLOPT_URL => 'https://www.wonduu.com/api/customers?filter[email]=' . $correo . '&display=full&output_format=JSON',
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => '',
 		  CURLOPT_MAXREDIRS => 10,
@@ -28,15 +28,17 @@ class NoteController extends Controller
 		  CURLOPT_CUSTOMREQUEST => 'GET',
 		  CURLOPT_HTTPHEADER => array(
 		    'Content-Type: text/xml',
-		    'Authorization: Basic V05CR1lBWEpWRExTQjVTS1dXNjhURkNRWEJEN0ZRWjE6:'
+		    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
 		  ),
 		));
 
 		$response = curl_exec($curl);
 
 		curl_close($curl);
-		
+
 		$json = json_decode($response, true);
+
+		//return $json;
 
 		if (array_key_exists('customers', $json)) {
 
@@ -46,8 +48,8 @@ class NoteController extends Controller
 
 			try {
 				    
-				$webService = new PrestaShopWebservice('https://test3.wonduu.com', 'WNBGYAXJVDLSB5SKWW68TFCQXBD7FQZ1', false);
-				$blankXml = $webService->get(['url' => 'https://test3.wonduu.com/api/customers?schema=blank']);
+				$webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
+				$blankXml = $webService->get(['url' => 'https://www.wonduu.com/api/customers?schema=blank']);
 
 			} catch (PrestaShopWebserviceException $ex) {
 

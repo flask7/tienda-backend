@@ -20,8 +20,8 @@ class carrito extends Controller
 
 			try {
 			    
-				$webService = new PrestaShopWebservice('https://test3.wonduu.com', 'WNBGYAXJVDLSB5SKWW68TFCQXBD7FQZ1', false);
-				$xml = $webService->get(['url' => 'https://test3.wonduu.com/api/carts?schema=blank']);
+				$webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
+				$xml = $webService->get(['url' => 'https://www.wonduu.com/api/carts?schema=blank']);
 
 			} catch (PrestaShopWebserviceException $ex) {
 
@@ -76,7 +76,7 @@ class carrito extends Controller
 
     	try {
 
-		    $webService = new PrestaShopWebservice('https://test3.wonduu.com', 'WNBGYAXJVDLSB5SKWW68TFCQXBD7FQZ1', false);
+		    $webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
 
 		} catch (PrestaShopWebserviceException $e) {
 
@@ -100,7 +100,7 @@ class carrito extends Controller
 		$curl = curl_init();
 
 		curl_setopt_array($curl, array(
-		  CURLOPT_URL => 'https://test3.wonduu.com/api/carts?filter[id_customer]=' . $id . '&display=full&output_format=JSON',
+		  CURLOPT_URL => 'https://www.wonduu.com/api/carts?filter[id_customer]=' . $id . '&display=full&output_format=JSON',
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => '',
 		  CURLOPT_MAXREDIRS => 10,
@@ -109,7 +109,7 @@ class carrito extends Controller
 		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 		  CURLOPT_CUSTOMREQUEST => 'GET',
 		  CURLOPT_HTTPHEADER => array(
-		    'Authorization: Basic V05CR1lBWEpWRExTQjVTS1dXNjhURkNRWEJEN0ZRWjE6',
+		    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
 		    ),
 		));
 
@@ -139,7 +139,7 @@ class carrito extends Controller
 				$filtro = $ids[0] . ',' . ($ids[count($ids) - 1]);
 
 				curl_setopt_array($curl2, array(
-				  CURLOPT_URL => 'https://test3.wonduu.com/api/products?filter[id]=[' . strval($filtro) . ']&display=[id,name]&output_format=JSON',
+				  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=[' . strval($filtro) . ']&display=[id,name]&output_format=JSON',
 				  CURLOPT_RETURNTRANSFER => true,
 				  CURLOPT_ENCODING => '',
 				  CURLOPT_MAXREDIRS => 10,
@@ -148,7 +148,7 @@ class carrito extends Controller
 				  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 				  CURLOPT_CUSTOMREQUEST => 'GET',
 				  CURLOPT_HTTPHEADER => array(
-				    'Authorization: Basic V05CR1lBWEpWRExTQjVTS1dXNjhURkNRWEJEN0ZRWjE6',
+				    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
 				    ),
 				));
 

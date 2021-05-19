@@ -14,8 +14,8 @@ class DireccionesController extends Controller
 
     	try {
 				    
-			$webService = new PrestaShopWebservice('https://test3.wonduu.com', 'WNBGYAXJVDLSB5SKWW68TFCQXBD7FQZ1', false);
-			$blankXml = $webService->get(['url' => 'https://test3.wonduu.com/api/addresses?schema=blank']);
+			$webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
+			$blankXml = $webService->get(['url' => 'https://www.wonduu.com/api/addresses?schema=blank']);
 
 		} catch (PrestaShopWebserviceException $ex) {
 
@@ -23,7 +23,7 @@ class DireccionesController extends Controller
 			echo 'Error: ' . $ex->getMessage();
 
 		}
-		
+		 
 		$addressFields = $blankXml->address->children();
 		$addressFields->id_country = 6;
 		$addressFields->id_state = $request->estado;
@@ -69,7 +69,7 @@ class DireccionesController extends Controller
     		$id = $request->id;
     		$direccion = $request->direccion;
 
-		    $webService = new PrestaShopWebservice('https://test3.wonduu.com', 'WNBGYAXJVDLSB5SKWW68TFCQXBD7FQZ1', false);
+		    $webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
 
 		    $xml = $webService->get([
 		        'resource' => 'addresses',
@@ -110,7 +110,7 @@ class DireccionesController extends Controller
 
     		$id = $request->id;
 
-		    $webService = new PrestaShopWebservice('https://test3.wonduu.com', 'WNBGYAXJVDLSB5SKWW68TFCQXBD7FQZ1', false);
+		    $webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
 
 		    $webService->delete([
 		        'resource' => 'addresses',
@@ -133,7 +133,7 @@ class DireccionesController extends Controller
 		$curl = curl_init();
 
 		curl_setopt_array($curl, array(
-		  CURLOPT_URL => 'https://test3.wonduu.com/api/addresses?filter[id_customer]=' . $id . '&display=full&output_format=JSON',
+		  CURLOPT_URL => 'https://www.wonduu.com/api/addresses?filter[id_customer]=' . $id . '&display=full&output_format=JSON',
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => '',
 		  CURLOPT_MAXREDIRS => 10,
@@ -142,7 +142,7 @@ class DireccionesController extends Controller
 		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 		  CURLOPT_CUSTOMREQUEST => 'GET',
 		  CURLOPT_HTTPHEADER => array(
-		    'Authorization: Basic V05CR1lBWEpWRExTQjVTS1dXNjhURkNRWEJEN0ZRWjE6',
+		    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
 		    ),
 		));
 

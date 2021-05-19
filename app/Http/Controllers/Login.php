@@ -15,7 +15,7 @@ class Login extends Controller
 		$curl = curl_init();
 
 		curl_setopt_array($curl, array(
-		  CURLOPT_URL => 'https://test3.wonduu.com/api/customers?filter[email]=' . $correo . '&display=full&output_format=JSON',
+		  CURLOPT_URL => 'https://www.wonduu.com/api/customers?filter[email]=' . $correo . '&display=full&output_format=JSON',
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => '',
 		  CURLOPT_MAXREDIRS => 10,
@@ -25,7 +25,7 @@ class Login extends Controller
 		  CURLOPT_CUSTOMREQUEST => 'GET',
 		  CURLOPT_HTTPHEADER => array(
 		    'Content-Type: text/xml',
-		    'Authorization: Basic V05CR1lBWEpWRExTQjVTS1dXNjhURkNRWEJEN0ZRWjE6:'
+		    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A'
 		  ),
 		));
 

@@ -12,7 +12,7 @@ class MensajesController extends Controller
 
     	$datos_mensajes = ['cliente' => [], 'mensaje' => []];
     	$id = $request->id;
-    	$url = 'https://test3.wonduu.com/api/messages?filter[id]=' . $id . '&display=full&output_format=JSON';
+    	$url = 'https://www.wonduu.com/api/messages?filter[id]=' . $id . '&display=full&output_format=JSON';
 		$curl = curl_init();
 
 		curl_setopt_array($curl, array(
@@ -25,7 +25,7 @@ class MensajesController extends Controller
 		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 		  CURLOPT_CUSTOMREQUEST => 'GET',
 		  CURLOPT_HTTPHEADER => array(
-		    'Authorization: Basic V05CR1lBWEpWRExTQjVTS1dXNjhURkNRWEJEN0ZRWjE6',
+		    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A=',
 		    ),
 		));
 
@@ -41,7 +41,7 @@ class MensajesController extends Controller
 
 				if ($cliente_id != "0" || $cliente_id != 0) {
 					
-					$url2 = 'https://test3.wonduu.com/api/customers?filter[id]=' . $cliente_id . '&display=[firstname,lastname]&output_format=JSON';
+					$url2 = 'https://www.wonduu.com/api/customers?filter[id]=' . $cliente_id . '&display=[firstname,lastname]&output_format=JSON';
 				
 					$curl2 = curl_init();
 
@@ -55,7 +55,7 @@ class MensajesController extends Controller
 					  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 					  CURLOPT_CUSTOMREQUEST => 'GET',
 					  CURLOPT_HTTPHEADER => array(
-					    'Authorization: Basic V05CR1lBWEpWRExTQjVTS1dXNjhURkNRWEJEN0ZRWjE6',
+					    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A=',
 					    ),
 					));
 
@@ -88,7 +88,7 @@ class MensajesController extends Controller
 
     	$datos_mensajes = ['vendedor' => [], 'mensaje' => []];
     	$id = $request->id;
-    	$url = 'https://test3.wonduu.com/api/customer_messages?filter[id]=' . strval($id) . '&display=full&output_format=JSON';
+    	$url = 'https://www.wonduu.com/api/customer_messages?filter[id]=' . strval($id) . '&display=full&output_format=JSON';
 		$curl = curl_init();
 
 		curl_setopt_array($curl, array(
@@ -101,7 +101,7 @@ class MensajesController extends Controller
 		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 		  CURLOPT_CUSTOMREQUEST => 'GET',
 		  CURLOPT_HTTPHEADER => array(
-		    'Authorization: Basic V05CR1lBWEpWRExTQjVTS1dXNjhURkNRWEJEN0ZRWjE6',
+		    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A=',
 		    ),
 		));
 
@@ -117,7 +117,7 @@ class MensajesController extends Controller
 
 				if ($vendedor_id != "0" || $vendedor_id != 0) {
 					
-					$url2 = 'https://test3.wonduu.com/api/employees?filter[id]=' . $vendedor_id . '&display=[firstname,lastname]&output_format=JSON';
+					$url2 = 'https://www.wonduu.com/api/employees?filter[id]=' . $vendedor_id . '&display=[firstname,lastname]&output_format=JSON';
 				
 					$curl2 = curl_init();
 
@@ -131,7 +131,7 @@ class MensajesController extends Controller
 					  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 					  CURLOPT_CUSTOMREQUEST => 'GET',
 					  CURLOPT_HTTPHEADER => array(
-					    'Authorization: Basic V05CR1lBWEpWRExTQjVTS1dXNjhURkNRWEJEN0ZRWjE6',
+					    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A=',
 					    ),
 					));
 

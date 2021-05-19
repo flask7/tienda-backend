@@ -26,7 +26,7 @@ class recuperar extends Controller
     	
     	try {
 		    
-		    $webService = new PrestaShopWebservice('https://test3.wonduu.com', 'WNBGYAXJVDLSB5SKWW68TFCQXBD7FQZ1', false);
+		    $webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
 		 
 		    $xml = $webService->get([
 		        'resource' => 'customers',

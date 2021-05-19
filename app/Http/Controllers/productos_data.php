@@ -17,7 +17,7 @@ class productos_data extends Controller
    	$data = ['sub_categorias' => ['nombre' => [], 'id' => [], 'productos' => []]];
 
 	curl_setopt_array($curl, array(
-	  CURLOPT_URL => 'https://test3.wonduu.com/api/categories?filter[id_parent]=' . $categoria . '&display=[id,name]&output_format=JSON',
+	  CURLOPT_URL => 'https://www.wonduu.com/api/categories?filter[id_parent]=' . $categoria . '&display=[id,name]&output_format=JSON',
 	  CURLOPT_RETURNTRANSFER => true,
 	  CURLOPT_ENCODING => '',
 	  CURLOPT_MAXREDIRS => 10,
@@ -26,7 +26,7 @@ class productos_data extends Controller
 	  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 	  CURLOPT_CUSTOMREQUEST => 'GET',
 	  CURLOPT_HTTPHEADER => array(
-	    'Authorization: Basic V05CR1lBWEpWRExTQjVTS1dXNjhURkNRWEJEN0ZRWjE6'
+	    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
 	  ),
 	));
 
@@ -42,7 +42,7 @@ class productos_data extends Controller
 		for ($i = 0; $i < count($json['categories']); $i++) { 
 
 	   		curl_setopt_array($curl2, array(
-			  CURLOPT_URL => 'https://test3.wonduu.com/api/products?filter[id_category_default]=' . $json['categories'][$i]['id'] . '&display=[id,price,name,id_default_image,id_category_default]&limit=3&output_format=JSON',
+			  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id_category_default]=' . $json['categories'][$i]['id'] . '&display=[id,price,name,id_default_image,id_category_default]&limit=3&output_format=JSON',
 			  CURLOPT_RETURNTRANSFER => true,
 			  CURLOPT_ENCODING => '',
 			  CURLOPT_MAXREDIRS => 10,
@@ -51,7 +51,7 @@ class productos_data extends Controller
 			  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 			  CURLOPT_CUSTOMREQUEST => 'GET',
 			  CURLOPT_HTTPHEADER => array(
-			    'Authorization: Basic V05CR1lBWEpWRExTQjVTS1dXNjhURkNRWEJEN0ZRWjE6'
+			    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
 			  ),
 			));
 
@@ -83,7 +83,7 @@ class productos_data extends Controller
    	$curl = curl_init();
 
 	curl_setopt_array($curl, array(
-	  CURLOPT_URL => 'https://test3.wonduu.com/api/images/products/' . $producto . '?limit=1&display=full&output_format=JSON',
+	  CURLOPT_URL => 'https://www.wonduu.com/api/images/products/' . $producto . '?limit=1&display=full&output_format=JSON',
 	  CURLOPT_RETURNTRANSFER => true,
 	  CURLOPT_ENCODING => '',
 	  CURLOPT_MAXREDIRS => 10,
@@ -92,7 +92,7 @@ class productos_data extends Controller
 	  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 	  CURLOPT_CUSTOMREQUEST => 'GET',
 	  CURLOPT_HTTPHEADER => array(
-	    'Authorization: Basic V05CR1lBWEpWRExTQjVTS1dXNjhURkNRWEJEN0ZRWjE6'
+	    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
 	  ),
 	));
 
@@ -101,7 +101,7 @@ class productos_data extends Controller
 
 	curl_close($curl);
 
-	return [base64_encode(file_get_contents('https://WNBGYAXJVDLSB5SKWW68TFCQXBD7FQZ1@test3.wonduu.com/api/images/products/' . $producto . '/' . $json[""][1]['id'] . '?display=full'))];
+	return [base64_encode(file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $producto . '/' . $json[""][1]['id'] . '?display=full'))];
 
    }
 
@@ -114,7 +114,7 @@ class productos_data extends Controller
 
    		if ($imagenes[$i] !== 'pasa') {
 
-   			$imagen = base64_encode(file_get_contents('https://WNBGYAXJVDLSB5SKWW68TFCQXBD7FQZ1@test3.wonduu.com/api/images/products/' . $imagenes[$i] . '?display=full'));
+   			$imagen = base64_encode(file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $imagenes[$i] . '?display=full'));
 
    			array_push($resultado, $imagen);
 
@@ -141,7 +141,7 @@ class productos_data extends Controller
 
    		if ($imagenes[$i] !== 'pasa') {
 
-   			$imagen = base64_encode(file_get_contents('https://WNBGYAXJVDLSB5SKWW68TFCQXBD7FQZ1@test3.wonduu.com/api/images/categories/' . $imagenes[$i] . '?display=full'));
+   			$imagen = base64_encode(file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/categories/' . $imagenes[$i] . '?display=full'));
 
    			array_push($resultado, $imagen);
 
