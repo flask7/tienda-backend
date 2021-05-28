@@ -44,7 +44,7 @@ class RelacionadosController extends Controller
 					$curl_descuentos = curl_init();
 
 					curl_setopt_array($curl_descuentos, array(
-					  CURLOPT_URL => 'https://www.wonduu.com/api/specific_prices?display=[reduction, reduction_type,id_customer]&limit=1&filter[id_product]=' . $id_producto . '&output_format=JSON',
+					  CURLOPT_URL => 'https://www.wonduu.com/api/specific_prices?display=[reduction,reduction_type,id_customer]&limit=1&filter[id_product]=' . $id_producto . '&output_format=JSON',
 					  CURLOPT_RETURNTRANSFER => true,
 					  CURLOPT_ENCODING => '',
 					  CURLOPT_MAXREDIRS => 10,
@@ -112,40 +112,40 @@ class RelacionadosController extends Controller
 					$descuento = 0;
 					$monto_descuento = 0;
 
-					if ($json_descuentos != null) {
+					if ($json_descuentos !== null) {
 						
-						if (array_key_exists('specific_prices', $json_descuentos)) {
-						
-							$descuento = floatval($json_descuentos["specific_prices"][0]["reduction"]);
+						if (array_key_exists("specific_prices", $json_descuentos)) {
 
-							if($json_descuentos["specific_prices"][0]["reduction_type"] == 'percentage' && $json_descuentos["specific_prices"][0]["id_customer"] == '0') {
+							if (array_key_exists('specific_prices', $json_descuentos)) {
+								
+								$descuento = floatval($json_descuentos["specific_prices"][0]["reduction"]);
 
-								$monto_descuento = $porcentaje_impuesto * $descuento;
+								if($json_descuentos["specific_prices"][0]["reduction_type"] == 'percentage' && $json_descuentos["specific_prices"][0]["id_customer"] == '0') {
 
-							}else if($json_descuentos["specific_prices"][0]["reduction_type"] == 'amount' && $json_descuentos["specific_prices"][0]["id_customer"] == '0') {
+									$monto_descuento = $porcentaje_impuesto * $descuento;
+											
+								}else if($json_descuentos["specific_prices"][0]["reduction_type"] == 'amount' && $json_descuentos["specific_prices"][0]["id_customer"] == '0') {
 
-								$monto_descuento = $descuento;
+									$monto_descuento = $descuento;
+
+								}
 
 							}
 
-						}
+						} 
 
 					}
 
 					$precio = $porcentaje_impuesto - $monto_descuento;
 					$base64 = base64_encode(file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $id_producto . '/' . $json["products"][$i]['id_default_image'] . '?display=full'));
 
-					array_push($datos, ['id' => $json["products"][$i]['id'], 'precio' => $precio, 'nombre' => $json["products"][$i]['name'], 'imagen' =>  $base64]);
+					array_push($datos, ['id' => $id_producto, 'precio' => $precio, 'nombre' => $json["products"][$i]['name'], 'imagen' =>  $base64]);
 
 				}else{
 
 					$base64 = 'paso';
 
 				}
-
-			}else{
-
-				continue;
 
 			}
 

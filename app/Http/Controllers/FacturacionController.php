@@ -359,11 +359,124 @@ class FacturacionController extends Controller
 
       }
 
-      public function repetir_pedido(Request $request)
-      {
-       
-       
+    public function repetir_pedido(Request $request)
+    {
 
-      }
+      $webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
+      $xml = $webService->get(['url' => 'https://www.wonduu.com/api/orders?schema=blank']);
+     
+      $id_carrito = $request->id;
+      $curl = curl_init();
+
+      curl_setopt_array($curl, array(
+        CURLOPT_URL => 'https://www.wonduu.com/api/carts?filter[id]=' . $id_carrito . '&display=full&output_format=JSON',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 0,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => 'GET',
+        CURLOPT_HTTPHEADER => array(
+          'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
+          ),
+      ));
+
+      $response = json_decode(curl_exec($curl), true);
+
+     // return $response;
+
+     // for ($i = 0; $i < count($response["carts"]); $i++) { 
+        
+        for ($y = 0; $y < count($response["carts"][0]["associations"]["cart_rows"]); $y++) { 
+          
+          $curl2 = curl_init();
+
+          curl_setopt_array($curl2, array(
+            CURLOPT_URL => 'https://www.wonduu.com/api/combinations?filter[id_product]=' . strval($response["carts"][0]["associations"]["cart_rows"][$y]["id_product"]) . '&display=full&output_format=JSON',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_HTTPHEADER => array(
+              'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
+              ),
+          ));
+
+          $response3 = curl_exec($curl2);
+          $json2 = json_decode($response3, true);
+
+          curl_close($curl2);
+
+          //return [$json2];
+
+          for ($x = 0; $x < count($json2["combinations"]); $x++) { 
+
+            if (floatval($json2["combinations"][$x]["quantity"]) < floatval($response["carts"][0]["associations"]["cart_rows"][$y]["quantity"])) {
+                
+              $curl_nombre = curl_init();
+
+              curl_setopt_array($curl_nombre, array(
+                CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=' . strval($response["carts"][0]["associations"]["cart_rows"][$y]["id_product"]) . '&display=[name]&output_format=JSON',
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'GET',
+                CURLOPT_HTTPHEADER => array(
+                  'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
+                  ),
+              ));
+
+              $response_nombre = curl_exec($curl_nombre);
+              $json_nombre = json_decode($response_nombre, true);
+
+              curl_close($curl_nombre);
+
+              return ['Cantidad del producto ' . $json_nombre["products"][0]["name"] . ' excedida, disponibles: ' . $json2["combinations"][$x]["quantity"]];
+
+            } else {
+
+              $xml->order->id_customer = $response["carts"][0]["id_customer"];
+              $xml->order->id_address_delivery = $response["carts"][0]["id_address_delivery"];
+              $xml->order->id_address_invoice = $response["carts"][0]["id_address_invoice"];
+              $xml->order->id_currency = 1;
+              $xml->order->id_lang = 1;
+
+              for ($z = 0; $z < count($response["carts"][0]["associations"]["cart_rows"]); $z++) { 
+                
+                $xml->order->associations->order_row->cart_row[$z]->id_product = $response["carts"][0]["associations"]["cart_rows"][$z]["id_product"];
+                $xml->order->associations->order_row->cart_row[$z]->quantity = $response["carts"][0]["associations"]["cart_rows"][$z]["quantity"];
+                $xml->order->associations->order_row->cart_row[$z]->id_product_attribute = $json2["combinations"][$x]["id"];
+
+              }
+
+            }
+
+          }
+
+        }
+
+     // }
+
+      $createdXml = $webService->add([
+
+         'resource' => 'orders',
+         'postXml' => $xml->asXML(),
+
+      ]);
+
+      $newOrderFields = $createdXml->cart->children();
+      $respuesta = 'Pedido efectuado satisfactoriamente';
+      $newOrderFields = $newCartsFields->id;
+
+      return [$respuesta, $newOrderFields];
+
+    }
 
 }
