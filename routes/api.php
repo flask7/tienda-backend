@@ -71,6 +71,8 @@ Route::post('get_direcciones', [DireccionesController::class, 'get_direcciones']
 
 Route::post('carrito', [carrito::class, 'add_carrito']);
 
+Route::post('carrito_validation', [carrito::class, 'carrito_validation']);
+
 Route::post('eliminar_carrito', [carrito::class, 'eliminar_carrito']);
 
 Route::post('get_carrito', [carrito::class, 'get_carrito']);
@@ -88,3 +90,9 @@ Route::post('orden_pago', [FacturacionController::class, 'orden_pago']);
 Route::post('facturas', [FacturacionController::class, 'facturas']);
 
 Route::post('historial_pedidos', [FacturacionController::class, 'historial_pedidos']);
+
+Route::post('pago', [FacturacionController::class, 'index']);
+
+Route::post('pedidos_info', [FacturacionController::class, 'pedidos_info']);
+
+Route::post('repetir_pedido', [FacturacionController::class, 'repetir_pedido']);

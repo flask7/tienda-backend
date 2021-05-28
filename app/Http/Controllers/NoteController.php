@@ -72,7 +72,7 @@ class NoteController extends Controller
 			   'postXml' => $blankXml->asXML(),
 
 			]);
-			
+
 			$newCustomerFields = $createdXml->customer->children();
 
 			$respuesta = [];

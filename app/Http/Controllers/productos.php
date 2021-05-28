@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 class productos extends Controller
 {
-    public function productos(Request $request){
+    public function productos(Request $request) {
 
     	$id = $request->id;
     	$curl = curl_init();
@@ -36,13 +36,13 @@ class productos extends Controller
 
     }
         
-    public function productos_info(Request $request){
+    public function productos_info(Request $request) {
 
     	$id = $request->id;
     	$curl = curl_init();
 
 		curl_setopt_array($curl, array(
-		  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=' . $id . '&display=full&output_format=JSON',
+		  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=' . $id . '&display=full&limit=1&output_format=JSON',
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => '',
 		  CURLOPT_MAXREDIRS => 10,
@@ -61,7 +61,70 @@ class productos extends Controller
 		curl_close($curl);
 		
 		$json = json_decode($response, true);
+		$curl_descuentos = curl_init();
 
+		curl_setopt_array($curl_descuentos, array(
+		  CURLOPT_URL => 'https://www.wonduu.com/api/specific_prices?display=[reduction,reduction_type,id_customer]&limit=1&filter[id_product]=' . $id . '&output_format=JSON',
+		  CURLOPT_RETURNTRANSFER => true,
+		  CURLOPT_ENCODING => '',
+		  CURLOPT_MAXREDIRS => 10,
+		  CURLOPT_TIMEOUT => 0,
+		  CURLOPT_FOLLOWLOCATION => true,
+		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+		  CURLOPT_CUSTOMREQUEST => 'GET',
+		  CURLOPT_HTTPHEADER => array(
+		    'Content-Type: text/xml',
+		    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
+		  ),
+		));
+
+		$responsed = curl_exec($curl_descuentos);
+		$json_descuentos = json_decode($responsed, true);
+
+		curl_close($curl_descuentos);
+
+		$curl_impuestos = curl_init();
+
+		curl_setopt_array($curl_impuestos, array(
+				CURLOPT_URL => 'https://www.wonduu.com/api/tax_rules?filter[id_tax_rules_group]=[' . $json['products'][0]['id_tax_rules_group'] . ']&limit=1&filter[id_country]=6&output_format=JSON&display=[id_tax]',
+				CURLOPT_RETURNTRANSFER => true,
+				CURLOPT_ENCODING => '',
+				CURLOPT_MAXREDIRS => 10,
+				CURLOPT_TIMEOUT => 0,
+				CURLOPT_FOLLOWLOCATION => true,
+				CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+				CURLOPT_CUSTOMREQUEST => 'GET',
+				CURLOPT_HTTPHEADER => array(
+				'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
+				),
+			));
+
+		$response_impuestos = curl_exec($curl_impuestos);
+
+		curl_close($curl_impuestos);
+
+		$json_impuestos = json_decode($response_impuestos, true);
+		$curl_porcentaje_impuestos = curl_init();
+
+		curl_setopt_array($curl_porcentaje_impuestos, array(
+		  CURLOPT_URL => 'https://www.wonduu.com/api/taxes?filter[id]=[' . $json_impuestos["tax_rules"][0]["id_tax"] . ']&output_format=JSON&display=[rate]',
+		  CURLOPT_RETURNTRANSFER => true,
+		  CURLOPT_ENCODING => '',
+		  CURLOPT_MAXREDIRS => 10,
+		  CURLOPT_TIMEOUT => 0,
+		  CURLOPT_FOLLOWLOCATION => true,
+		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+		  CURLOPT_CUSTOMREQUEST => 'GET',
+		  CURLOPT_HTTPHEADER => array(
+		    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
+		  ),
+		));
+
+		$response_porcentaje_impuestos = curl_exec($curl_porcentaje_impuestos);
+
+		curl_close($curl_porcentaje_impuestos);
+
+		$json_porcentaje_impuestos = json_decode($response_porcentaje_impuestos, true);
 		$curl2 = curl_init();
 
 		curl_setopt_array($curl2, array(
@@ -81,6 +144,9 @@ class productos extends Controller
 
 		$response2 = curl_exec($curl2);
 		$json2 = json_decode($response2, true);
+
+		curl_close($curl2);
+
 		$img = [];
 
 		for ($i = 1; $i < count($json2[""]); $i++) { 
@@ -91,7 +157,7 @@ class productos extends Controller
 
 		}
 
-		if(array_key_exists('product_option_values', $json['products'][0]['associations'])){
+		if(array_key_exists('product_option_values', $json['products'][0]['associations'])) {
 
 			$opciones = [];
 			$curl3 = curl_init();
@@ -151,13 +217,76 @@ class productos extends Controller
 
 			curl_close($curl4);
 
-			return [$json, $img, $opciones, $nombre_opciones];
+			$arrays = [];
+
+			if (array_key_exists("specific_prices", $json_descuentos)) {
+				
+				$precio_base = floatval($json["products"][0]['price']);
+				$impuestos = floatval($json_porcentaje_impuestos["taxes"][0]['rate'])/100;
+				$porcentaje_impuesto = ($precio_base * $impuestos) + $precio_base;
+				$descuento = 0;
+				$monto_descuento = 0;
+
+				if (array_key_exists('specific_prices', $json_descuentos)) {
+					
+					$descuento = floatval($json_descuentos["specific_prices"][0]["reduction"]);
+
+					if($json_descuentos["specific_prices"][0]["reduction_type"] == 'percentage' && $json_descuentos["specific_prices"][0]["id_customer"] == '0') {
+
+								$monto_descuento = $porcentaje_impuesto * $descuento;
+
+					}else if($json_descuentos["specific_prices"][0]["reduction_type"] == 'amount' && $json_descuentos["specific_prices"][0]["id_customer"] == '0') {
+
+						$monto_descuento = $descuento;
+
+					}
+
+				}
+
+				$precio = $porcentaje_impuesto - $monto_descuento;
+				$json['products'][0]['price'] = $precio;
+
+			} 
+
+			$arrays =  [$json, $img, $opciones, $nombre_opciones, $json_porcentaje_impuestos];
+
+			return $arrays;
 
 		}else{
 
-			return [$json, $img];
+			if (array_key_exists("specific_prices", $json_descuentos)) {
+
+				$precio_base = floatval($json["products"][0]['price']);
+				$impuestos = floatval($json_porcentaje_impuestos["taxes"][0]['rate'])/100;
+				$porcentaje_impuesto = ($precio_base * $impuestos) + $precio_base;
+				$descuento = 0;
+				$monto_descuento = 0;
+
+				if (array_key_exists('specific_prices', $json_descuentos)) {
+					
+					$descuento = floatval($json_descuentos["specific_prices"][0]["reduction"]);
+
+					if($json_descuentos["specific_prices"][0]["reduction_type"] == 'percentage') {
+
+						$monto_descuento = $porcentaje_impuesto * $descuento;
+
+					}else if($json_descuentos["specific_prices"][0]["reduction_type"] == 'amount') {
+
+						$monto_descuento = $descuento;
+
+					}
+
+				}
+
+				$precio = $porcentaje_impuesto - $monto_descuento;
+				$json['products'][0]['price'] = $precio;
+
+			} 
+
+			$arrays = [$json, $img, $json_porcentaje_impuestos];
+
+			return $arrays;
 
 		}
-
     }
 }
