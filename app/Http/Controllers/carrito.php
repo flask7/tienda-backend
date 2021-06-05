@@ -14,7 +14,7 @@ class carrito extends Controller
 
 			return ['Error en envío de los datos'];
 
-		}else{
+		} else {
 
 			try {
 
@@ -290,11 +290,13 @@ class carrito extends Controller
 		]);
 
 		$cart = $json['carts'][$id_carro]['associations']['cart_rows'];
+		$contador = 0;
 
 		for ($y = 0; $y < count($cart); $y++) {
 			
-			if ($y == intval($request->id)) {
+			if ($y == intval($request->id) && $contador < 1) {
 				
+				$contador++;
 				unset($new_row->cart->associations->cart_rows->cart_row[$y]);
 	
 			} else {

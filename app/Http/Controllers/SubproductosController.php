@@ -10,9 +10,16 @@ class SubproductosController extends Controller
 
     	$categoria = $request->categoria;
 	   	$curl = curl_init();
+	   	$limite = '';
+
+	   	if ($categoria == 130) {
+
+	   		$limite = '&limit=50';	
+	   		
+	   	}
 
 		curl_setopt_array($curl, array(
-		  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id_category_default]=' . $categoria . '&display=[id,price,name,id_default_image,id_tax_rules_group]&output_format=JSON',
+		  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id_category_default]=' . $categoria . '&display=[id,price,name,id_default_image,id_tax_rules_group]&output_format=JSON' . $limite,
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => '',
 		  CURLOPT_MAXREDIRS => 10,
@@ -39,24 +46,21 @@ class SubproductosController extends Controller
 			if (array_key_exists('id', $json["products"][$i])) {
 
 				if (array_key_exists('id_default_image', $json["products"][$i])) {
-					
-					try{
 
-						$imagen = @file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $json["products"][$i]['id'] . '/' . $json["products"][$i]['id_default_image'] . '?display=full', true);
-
-						if ($imagen !== false) {
-							
-							$base64 = base64_encode($imagen);
-
-						} else {
-
-							$base64 = 'paso';
-
-						}
-											
-					} catch(Exception $ex) {
-
+					if (empty($json["products"][$i]['id_default_image'])) {
+						
 						$base64 = 'paso';
+
+					} else {
+
+						$imagen = @file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $json["products"][$i]['id'] . '/' . $json["products"][$i]['id_default_image'] . '/small_default');
+		   				$base64 = base64_encode($imagen);
+
+		   				if (!$imagen || $base64 == null) {
+		   				
+		   					$base64 = 'paso';
+
+		   				}
 
 					}
 					

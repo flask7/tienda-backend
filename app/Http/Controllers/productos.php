@@ -137,7 +137,6 @@ class productos extends Controller
 		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 		  CURLOPT_CUSTOMREQUEST => 'GET',
 		  CURLOPT_HTTPHEADER => array(
-		    'Content-Type: text/xml',
 		    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
 		  ),
 		));
@@ -147,11 +146,13 @@ class productos extends Controller
 
 		curl_close($curl2);
 
+		//return $json2[""][1];
+
 		$img = [];
 
 		for ($i = 1; $i < count($json2[""]); $i++) { 
 
-			$imagen = base64_encode(file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $id . '/' . $json2[""][$i]['id'] . '?display=full'));
+			$imagen = base64_encode(@file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . strval($id) . '/' . $json2[""][$i]['id']));
 
 			array_push($img, $imagen);
 
@@ -252,7 +253,7 @@ class productos extends Controller
 
 			return $arrays;
 
-		}else{
+		} else {
 
 			if (array_key_exists("specific_prices", $json_descuentos)) {
 
@@ -266,11 +267,11 @@ class productos extends Controller
 					
 					$descuento = floatval($json_descuentos["specific_prices"][0]["reduction"]);
 
-					if($json_descuentos["specific_prices"][0]["reduction_type"] == 'percentage') {
+					if ($json_descuentos["specific_prices"][0]["reduction_type"] == 'percentage') {
 
 						$monto_descuento = $porcentaje_impuesto * $descuento;
 
-					}else if($json_descuentos["specific_prices"][0]["reduction_type"] == 'amount') {
+					} else if($json_descuentos["specific_prices"][0]["reduction_type"] == 'amount') {
 
 						$monto_descuento = $descuento;
 
