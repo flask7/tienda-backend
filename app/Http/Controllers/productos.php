@@ -146,27 +146,35 @@ class productos extends Controller
 
 		curl_close($curl2);
 
-		//return $json2[""][1];
-
 		$img = [];
 
 		for ($i = 1; $i < count($json2[""]); $i++) { 
 
-			$imagen = base64_encode(@file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . strval($id) . '/' . $json2[""][$i]['id']));
+			/*$imagen = base64_encode(@file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . strval($id) . '/' . $json2[""][$i]['id']));*/
+
+			$imagen = strval($id) . '/' . $json2[""][$i]['id'];
 
 			array_push($img, $imagen);
 
 		}
 
-		if(array_key_exists('product_option_values', $json['products'][0]['associations'])) {
+		if (array_key_exists('product_option_values', $json['products'][0]['associations'])) {
 
 			$opciones = [];
 			$curl3 = curl_init();
+			$valor_opciones = [];
+			$valor_atributos = [];
 
 			for ($i = 0; $i < count($json['products'][0]['associations']['product_option_values']); $i++) { 
 			
-				curl_setopt_array($curl3, array(
-				  CURLOPT_URL => 'https://www.wonduu.com/api/product_option_values?filter[id]=' . $json['products'][0]['associations']['product_option_values'][$i]['id'] . '&display=full&output_format=JSON',
+				array_push($valor_opciones, $json['products'][0]['associations']['product_option_values'][$i]['id']);
+
+			}
+
+			$valor_opciones_imploded = implode('|', $valor_opciones);
+
+			curl_setopt_array($curl3, array(
+				  CURLOPT_URL => 'https://www.wonduu.com/api/product_option_values?filter[id]=[' . $valor_opciones_imploded . ']&display=full&output_format=JSON',
 				  CURLOPT_RETURNTRANSFER => true,
 				  CURLOPT_ENCODING => '',
 				  CURLOPT_MAXREDIRS => 10,
@@ -175,47 +183,46 @@ class productos extends Controller
 				  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 				  CURLOPT_CUSTOMREQUEST => 'GET',
 				  CURLOPT_HTTPHEADER => array(
-				    'Content-Type: text/xml',
 				    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
 				  ),
 				));
 
-				$response3 = curl_exec($curl3);
-				$json3 = json_decode($response3, true);
-
-				array_push($opciones, $json3);
-
-			}
+			$response3 = curl_exec($curl3);
+			$json3 = json_decode($response3, true);
 
 			curl_close($curl3);
+			array_push($opciones, $json3);
 
 			$curl4 = curl_init();
 			$nombre_opciones = [];
 
-			for ($i = 0; $i < count($opciones); $i++) { 
+			for ($i = 0; $i < count($json3["product_option_values"]); $i++) { 
 				
-				curl_setopt_array($curl4, array(
-				  CURLOPT_URL => 'https://www.wonduu.com/api/product_options?filter[id]=' . $opciones[$i]['product_option_values'][0]['id_attribute_group'] . '&display=[id,name]&output_format=JSON',
-				  CURLOPT_RETURNTRANSFER => true,
-				  CURLOPT_ENCODING => '',
-				  CURLOPT_MAXREDIRS => 10,
-				  CURLOPT_TIMEOUT => 0,
-				  CURLOPT_FOLLOWLOCATION => true,
-				  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-				  CURLOPT_CUSTOMREQUEST => 'GET',
-				  CURLOPT_HTTPHEADER => array(
-				    'Content-Type: text/xml',
-				    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
-				  ),
-				));
-
-				$response4 = curl_exec($curl4);
-				$json4 = json_decode($response4, true);
-
-				array_push($nombre_opciones, $json4);
+				array_push($valor_atributos, $json3['product_option_values'][$i]['id_attribute_group']);
 
 			}
 
+			$valor_atributos_imploded = implode('|', $valor_atributos);
+
+			curl_setopt_array($curl4, array(
+			  CURLOPT_URL => 'https://www.wonduu.com/api/product_options?filter[id]=[' . $valor_atributos_imploded . ']&display=[id,name]&output_format=JSON',
+			  CURLOPT_RETURNTRANSFER => true,
+			  CURLOPT_ENCODING => '',
+			  CURLOPT_MAXREDIRS => 10,
+			  CURLOPT_TIMEOUT => 0,
+			  CURLOPT_FOLLOWLOCATION => true,
+			  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			  CURLOPT_CUSTOMREQUEST => 'GET',
+			  CURLOPT_HTTPHEADER => array(
+			    'Content-Type: text/xml',
+			    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
+			  ),
+			));
+
+			$response4 = curl_exec($curl4);
+			$json4 = json_decode($response4, true);
+
+			array_push($nombre_opciones, $json4);
 			curl_close($curl4);
 
 			$arrays = [];

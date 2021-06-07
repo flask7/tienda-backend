@@ -53,14 +53,18 @@ class SubproductosController extends Controller
 
 					} else {
 
-						$imagen = @file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $json["products"][$i]['id'] . '/' . $json["products"][$i]['id_default_image'] . '/small_default');
-		   				$base64 = base64_encode($imagen);
+						/*$imagen = @file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $json["products"][$i]['id'] . '/' . $json["products"][$i]['id_default_image'] . '/small_default');
+		   				$base64 = base64_encode($imagen);*/
 
-		   				if (!$imagen || $base64 == null) {
+
+
+		   				/*if (!$imagen || $base64 == null) {
 		   				
 		   					$base64 = 'paso';
 
-		   				}
+		   				}*/
+
+		   				$base64 = $json["products"][$i]['id'] . '/' . $json["products"][$i]['id_default_image'];
 
 					}
 					

@@ -260,58 +260,119 @@ class productos_data extends Controller
    	$producto = $request->producto;
    	$curl = curl_init();
 
-		curl_setopt_array($curl, array(
-		  CURLOPT_URL => 'https://www.wonduu.com/api/images/products/' . $producto . '?limit=1&display=full&output_format=JSON',
-		  CURLOPT_RETURNTRANSFER => true,
-		  CURLOPT_ENCODING => '',
-		  CURLOPT_MAXREDIRS => 10,
-		  CURLOPT_TIMEOUT => 0,
-		  CURLOPT_FOLLOWLOCATION => true,
-		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-		  CURLOPT_CUSTOMREQUEST => 'GET',
-		  CURLOPT_HTTPHEADER => array(
-		    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
-		  ),
-		));
+	curl_setopt_array($curl, array(
+	  CURLOPT_URL => 'https://www.wonduu.com/api/images/products/' . $producto . '?limit=1&display=full&output_format=JSON',
+	  CURLOPT_RETURNTRANSFER => true,
+	  CURLOPT_ENCODING => '',
+	  CURLOPT_MAXREDIRS => 10,
+	  CURLOPT_TIMEOUT => 0,
+	  CURLOPT_FOLLOWLOCATION => true,
+	  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+	  CURLOPT_CUSTOMREQUEST => 'GET',
+	  CURLOPT_HTTPHEADER => array(
+	    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
+	  ),
+	));
 
-		$response = curl_exec($curl);
-		$json = json_decode($response, true);
+	$response = curl_exec($curl);
+	$json = json_decode($response, true);
 
-		curl_close($curl);
+	curl_close($curl);
 
-		return [base64_encode(@file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $producto . '/' . $json[""][0]['id'] . '?display=full'))];
+	return [base64_encode(@file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $producto . '/' . $json[""][0]['id'] . '/large_default'))];
 
    }
 
    public function imagenes(Request $request) {
 
-   	$imagenes = $request->imagenes;
-   	$resultado = [];
+		$imagenes = $request->imagenes;
+		$resultado = [];
+		//$urls = [];
 
-   	for ($i = 0; $i < count($imagenes); $i++) { 
+		for ($i = 0; $i < count($imagenes); $i++) { 
 
-   		if ($imagenes[$i] != 'pasa') {
+			//array_push($urls,'https://www.wonduu.com/api/images/products/' . $imagenes[$i] . '/small_default');
 
-   			try {
+			if ($imagenes[$i] != 'pasa') {
 
-   				$imagen = @file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $imagenes[$i] . '/small_default');
-   				$base64 = base64_encode($imagen);
+				try {
 
-   				array_push($resultado, $base64);
+					$imagen = @file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $imagenes[$i] . '/small_default');
+					$base64 = base64_encode($imagen);
 
-   			} catch (Exception $ex) {
+					array_push($resultado, $base64);
 
-   				array_push($resultado, 'pasa');
+				} catch (Exception $ex) {
 
-   			}
+					array_push($resultado, 'pasa');
 
-   		} else {
+				}
 
-   			array_push($resultado, 'pasa');
+			} else {
 
-   		}
+				array_push($resultado, 'pasa');
 
-   	}
+			}
+
+		}
+
+   		/*$multi = curl_multi_init();
+	    $reqs  = [];*/
+
+	    /*for ($i = 0; $i < count($urls); $i++) {
+
+	        $req = curl_init();
+	        curl_setopt_array($req, array(
+			  CURLOPT_URL => $urls[$i],
+			  CURLOPT_RETURNTRANSFER => true,
+			  CURLOPT_ENCODING => '',
+			  CURLOPT_MAXREDIRS => 10,
+			  CURLOPT_TIMEOUT => 0,
+			  CURLOPT_FOLLOWLOCATION => true,
+			  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			  CURLOPT_CUSTOMREQUEST => 'GET',
+			  CURLOPT_HTTPHEADER => array(
+			    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
+			  ),
+			));
+	        
+	        curl_multi_add_handle($multi, $req);
+	        $reqs[] = $req;
+
+	        //return [$urls[$i]];
+
+	    }*/
+
+	   /* $active = null;
+
+	    do {
+
+	        $mrc = curl_multi_exec($multi, $active);
+
+	    } while ($mrc == CURLM_CALL_MULTI_PERFORM);
+
+	    while ($active && $mrc == CURLM_OK) {
+
+	        if (curl_multi_select($multi) != -1) {
+
+	            do {
+
+	                $mrc = curl_multi_exec($multi, $active);
+
+	            } while ($mrc == CURLM_CALL_MULTI_PERFORM);
+
+	        }
+
+	    }
+
+	    foreach ($reqs as $req) {
+
+	        curl_multi_getcontent($req);
+	        curl_multi_remove_handle($multi, $req);
+
+	    }
+
+	    curl_multi_close($multi);*/
 
 		return $resultado;
 
