@@ -150,8 +150,6 @@ class productos extends Controller
 
 		for ($i = 1; $i < count($json2[""]); $i++) { 
 
-			/*$imagen = base64_encode(@file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . strval($id) . '/' . $json2[""][$i]['id']));*/
-
 			$imagen = strval($id) . '/' . $json2[""][$i]['id'];
 
 			array_push($img, $imagen);

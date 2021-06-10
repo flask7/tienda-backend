@@ -287,17 +287,21 @@ class productos_data extends Controller
 
 		$imagenes = $request->imagenes;
 		$resultado = [];
-		//$urls = [];
+		$size = '/small_default';
+
+		if (!empty($request->size)) {
+			
+			$size = '/large_default';
+
+		}
 
 		for ($i = 0; $i < count($imagenes); $i++) { 
-
-			//array_push($urls,'https://www.wonduu.com/api/images/products/' . $imagenes[$i] . '/small_default');
 
 			if ($imagenes[$i] != 'pasa') {
 
 				try {
 
-					$imagen = @file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $imagenes[$i] . '/small_default');
+					$imagen = @file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $imagenes[$i] . $size);
 					$base64 = base64_encode($imagen);
 
 					array_push($resultado, $base64);
@@ -315,64 +319,6 @@ class productos_data extends Controller
 			}
 
 		}
-
-   		/*$multi = curl_multi_init();
-	    $reqs  = [];*/
-
-	    /*for ($i = 0; $i < count($urls); $i++) {
-
-	        $req = curl_init();
-	        curl_setopt_array($req, array(
-			  CURLOPT_URL => $urls[$i],
-			  CURLOPT_RETURNTRANSFER => true,
-			  CURLOPT_ENCODING => '',
-			  CURLOPT_MAXREDIRS => 10,
-			  CURLOPT_TIMEOUT => 0,
-			  CURLOPT_FOLLOWLOCATION => true,
-			  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-			  CURLOPT_CUSTOMREQUEST => 'GET',
-			  CURLOPT_HTTPHEADER => array(
-			    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
-			  ),
-			));
-	        
-	        curl_multi_add_handle($multi, $req);
-	        $reqs[] = $req;
-
-	        //return [$urls[$i]];
-
-	    }*/
-
-	   /* $active = null;
-
-	    do {
-
-	        $mrc = curl_multi_exec($multi, $active);
-
-	    } while ($mrc == CURLM_CALL_MULTI_PERFORM);
-
-	    while ($active && $mrc == CURLM_OK) {
-
-	        if (curl_multi_select($multi) != -1) {
-
-	            do {
-
-	                $mrc = curl_multi_exec($multi, $active);
-
-	            } while ($mrc == CURLM_CALL_MULTI_PERFORM);
-
-	        }
-
-	    }
-
-	    foreach ($reqs as $req) {
-
-	        curl_multi_getcontent($req);
-	        curl_multi_remove_handle($multi, $req);
-
-	    }
-
-	    curl_multi_close($multi);*/
 
 		return $resultado;
 
