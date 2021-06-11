@@ -106,12 +106,45 @@ class carrito extends Controller
 
 						} else {
 
-							for ($i = 0; $i < count($json2["combinations"]); $i++) { 
+							if (array_key_exists('combinations', $json2)) {
+								
+								for ($i = 0; $i < count($json2["combinations"]); $i++) { 
 							
+									$resultados = $this->validar_combinacion_2($request, $json2, $i, $json, $json_productos["products"][0]["id_default_combination"]);
+
+									$v = $resultados[0];
+									//$cantidad_comb = $resultados[1];
+
+									if ($resultados != null) {
+										
+										break;
+
+									}
+
+								}
+
+								if (count($resultados) > 1) {
+										
+									return [$resultados[0]];
+
+								}
+
+								$v = $resultados[0];
+
+							}
+
+						}
+
+					} else {
+
+						if (array_key_exists('combinations', $json2)) {
+
+							for ($i = 0; $i < count($json2["combinations"]); $i++) { 
+								
 								$resultados = $this->validar_combinacion_2($request, $json2, $i, $json, $json_productos["products"][0]["id_default_combination"]);
 
 								$v = $resultados[0];
-								$cantidad_comb = $resultados[1];
+								//$cantidad_comb = $resultados[1];
 
 								if ($resultados != null) {
 									
@@ -130,31 +163,6 @@ class carrito extends Controller
 							$v = $resultados[0];
 
 						}
-
-					} else {
-
-						for ($i = 0; $i < count($json2["combinations"]); $i++) { 
-							
-							$resultados = $this->validar_combinacion_2($request, $json2, $i, $json, $json_productos["products"][0]["id_default_combination"]);
-
-							$v = $resultados[0];
-							$cantidad_comb = $resultados[1];
-
-							if ($resultados != null) {
-								
-								break;
-
-							}
-
-						}
-
-						if (count($resultados) > 1) {
-								
-							return [$resultados[0]];
-
-						}
-
-						$v = $resultados[0];
 
 					}
 
@@ -176,7 +184,13 @@ class carrito extends Controller
 					$aux = [];
 					$aux['id_product'] = $request->id;
 					$aux['id_address_delivery'] = $request->direccion;
-					$aux['id_product_attribute'] = $v;
+
+					if ($v != null) {
+
+						$aux['id_product_attribute'] = $v;
+
+					}
+					
 					$aux['quantity'] = $request->quantity;
 					$cart[] = $aux;
 
@@ -184,7 +198,13 @@ class carrito extends Controller
 						
 						$new_row->cart->associations->cart_rows->cart_row[$y]->id_product = $cart[$y]['id_product'];
 						$new_row->cart->associations->cart_rows->cart_row[$y]->id_address_delivery = $cart[$y]['id_address_delivery'];
-						$new_row->cart->associations->cart_rows->cart_row[$y]->id_product_attribute = $cart[$y]['id_product_attribute'];
+
+						if ($v != null) {
+
+							$new_row->cart->associations->cart_rows->cart_row[$y]->id_product_attribute = $cart[$y]['id_product_attribute'];
+
+						}
+
 						$new_row->cart->associations->cart_rows->cart_row[$y]->quantity = $cart[$y]['quantity'];
 			
 					}
@@ -223,17 +243,18 @@ class carrito extends Controller
 
 					for ($i = 0; $i < count($json2["combinations"]); $i++) { 
 
-						if (count($json2["combinations"][$i]["associations"]["product_option_values"]) == count($request->opciones)) {
-							
-							$resultados = $this->validar_combinacion_2($request, $json2, $i, $json, $json_productos["products"][0]["id_default_combination"]);
+						$resultados = $this->validar_combinacion_2($request, $json2, $i, $json, $json_productos["products"][0]["id_default_combination"]);
 
+						if ($resultados != null) {
+							
 							if (count($resultados) > 1) {
-								
+							
 								return [$resultados[0]];
 
 							}
 
 							$id_combinacion = $resultados[0];
+								
 							break;
 
 						}
@@ -452,7 +473,7 @@ class carrito extends Controller
 
     }
 
-    public function get_carrito(Request $request){
+    public function get_carrito(Request $request) {
 
 		$id = $request->id;
 		$curl = curl_init();
@@ -509,10 +530,12 @@ class carrito extends Controller
 				if (count($ids) > 0) {
 					
 					$curl2 = curl_init();
-					$filtro = $ids[0] . ',' . ($ids[count($ids) - 1]);
+					$filtro = implode('|', $ids);
+
+					//$filtro = $ids[0] . ',' . ($ids[count($ids) - 1]);
 
 					curl_setopt_array($curl2, array(
-					  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=[' . strval($filtro) . ']&display=[id,name]&output_format=JSON',
+					  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=[' . strval($filtro) . ']&display=full&output_format=JSON',
 					  CURLOPT_RETURNTRANSFER => true,
 					  CURLOPT_ENCODING => '',
 					  CURLOPT_MAXREDIRS => 10,
@@ -529,7 +552,75 @@ class carrito extends Controller
 
 					curl_close($curl2);
 
-					return [$response, $response2];
+					$opciones_nombres = [];
+
+					for ($x = 0; $x < count($response2["products"]); $x++) { 
+						
+						if (array_key_exists('associations', $response2["products"][$x])) {
+							
+							for ($i = 0; $i < count($response2["products"][$x]["associations"]["product_option_values"]); $i++) { 
+								
+								array_push($opciones_nombres, $response2["products"][$x]["associations"]["product_option_values"][$i]["id"]);
+
+							}
+
+						}
+
+					}
+
+					$opciones_nombres_imploded = implode('|', $opciones_nombres);
+					$curlx = curl_init();
+
+					curl_setopt_array($curlx, array(
+					  CURLOPT_URL => 'https://www.wonduu.com/api/product_option_values?filter[id]=[' . $opciones_nombres_imploded . ']&display=full&output_format=JSON',
+					  CURLOPT_RETURNTRANSFER => true,
+					  CURLOPT_ENCODING => '',
+					  CURLOPT_MAXREDIRS => 10,
+					  CURLOPT_TIMEOUT => 0,
+					  CURLOPT_FOLLOWLOCATION => true,
+					  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+					  CURLOPT_CUSTOMREQUEST => 'GET',
+					  CURLOPT_HTTPHEADER => array(
+					    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
+					  ),
+					));
+
+					$responsex = curl_exec($curlx);
+					$jsonx = json_decode($responsex, true);
+
+					curl_close($curlx);
+
+					$curl4 = curl_init();
+					$valor_atributos = [];
+
+					for ($i = 0; $i < count($jsonx["product_option_values"]); $i++) { 
+						
+						array_push($valor_atributos, $jsonx['product_option_values'][$i]['id_attribute_group']);
+
+					}
+
+					$valor_atributos_imploded = implode('|', $valor_atributos);
+					$curl3 = curl_init();
+
+					curl_setopt_array($curl3, array(
+					  CURLOPT_URL => 'https://www.wonduu.com/api/product_options?display=full&output_format=JSON&filter[id]=' . $valor_atributos_imploded . ']',
+					  CURLOPT_RETURNTRANSFER => true,
+					  CURLOPT_ENCODING => '',
+					  CURLOPT_MAXREDIRS => 10,
+					  CURLOPT_TIMEOUT => 0,
+					  CURLOPT_FOLLOWLOCATION => true,
+					  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+					  CURLOPT_CUSTOMREQUEST => 'GET',
+					  CURLOPT_HTTPHEADER => array(
+					    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
+					    ),
+					));
+
+					$response3 = json_decode(curl_exec($curl3), true);
+
+					curl_close($curl3);
+
+					return [$response, $response2, $response3];
 
 				} else {
 
@@ -548,6 +639,139 @@ class carrito extends Controller
 			return [];
 
 		}
+
+    }
+
+    public function modificar_producto_carrito(Request $request)
+    {
+    	$webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
+    	$new_row = $webService->get([
+
+		   'resource' => 'carts',
+		   'id' => $request->id
+
+		]);
+
+    	$curl = curl_init();
+
+		curl_setopt_array($curl, array(
+		  CURLOPT_URL =>'https://www.wonduu.com/api/carts?filter[id_customer]=' . $request->id_customer . '&display=full&output_format=JSON',
+		  CURLOPT_RETURNTRANSFER => true,
+		  CURLOPT_ENCODING => '',
+		  CURLOPT_MAXREDIRS => 10,
+		  CURLOPT_TIMEOUT => 0,
+		  CURLOPT_FOLLOWLOCATION => true,
+		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+		  CURLOPT_CUSTOMREQUEST => 'GET',
+		  CURLOPT_HTTPHEADER => array(
+		    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
+		    ),
+		));
+
+		$json = json_decode(curl_exec($curl), true);
+		$cart = [];
+		$id_carrito = count($json['carts']) - 1;
+		$curl_combinacion = curl_init();
+
+		curl_setopt_array($curl_combinacion, array(
+		  CURLOPT_URL =>'https://www.wonduu.com/api/combinations?display=full&output_format=JSON&filter[id_product]=' . $request->id_product,
+		  CURLOPT_RETURNTRANSFER => true,
+		  CURLOPT_ENCODING => '',
+		  CURLOPT_MAXREDIRS => 10,
+		  CURLOPT_TIMEOUT => 0,
+		  CURLOPT_FOLLOWLOCATION => true,
+		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+		  CURLOPT_CUSTOMREQUEST => 'GET',
+		  CURLOPT_HTTPHEADER => array(
+		    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
+		    ),
+		));
+
+		$json_combinacion = json_decode(curl_exec($curl_combinacion), true);
+		
+		curl_close($curl, $curl_combinacion);
+
+		if (array_key_exists('associations', $json['carts'][$id_carrito])) {
+
+			$cart = $json['carts'][$id_carrito]['associations']['cart_rows'];
+
+		}
+
+		$nueva_combinacion = null;
+		$opciones_array = [];
+
+		if ($request->opciones) {
+
+			if (count($request->opciones) > 0) {
+
+				for ($i = 0; $i < count($request->opciones); $i++) { 
+					
+					array_push($opciones_array, $request->opciones[$i]);
+
+				}
+				
+			}
+
+		}
+
+		for ($i = 0; $i < count($json_combinacion["combinations"]); $i++) { 
+			
+			for ($y = 0; $y < count($json_combinacion["combinations"][$i]["associations"]["product_option_values"]); $y++) { 
+				
+				if ($opciones_array == $json_combinacion["combinations"][$i]["associations"]["product_option_values"][$y]) {
+					
+					$nueva_combinacion = $opciones_array == $json_combinacion["combinations"][$i]["id"];
+
+					if (floatval($json_combinacion["combinations"][$i]["quantity"]) < float($request->quantity)) {
+						
+						return ["La cantidad del producto: " . $request->nombre . " ha sido excedida, existencia: " . $json_combinacion["combinations"][$i]["quantity"]];
+
+					}
+
+					break;
+
+				}
+
+			}
+
+		}
+
+		for ($y = 0; $y < count($cart); $y++){
+			
+			if ($request->indice == $y) {
+				
+				if ($request->opciones) {
+
+					if (count($request->opciones) > 0) {
+						
+						$new_row->cart->associations->cart_rows->cart_row[$y]->id_product_attribute = $nueva_combinacion;
+						
+					}
+
+				}
+				
+				$new_row->cart->associations->cart_rows->cart_row[$y]->quantity = $request->quantity;
+
+			} else {
+
+				$new_row->cart->associations->cart_rows->cart_row[$y]->id_product_attribute = $cart[$y]['id_product_attribute'];
+				$new_row->cart->associations->cart_rows->cart_row[$y]->quantity = $cart[$y]['quantity'];
+
+			}
+
+			$new_row->cart->associations->cart_rows->cart_row[$y]->id_product = $cart[$y]['id_product'];
+			$new_row->cart->associations->cart_rows->cart_row[$y]->id_address_delivery = $cart[$y]['id_address_delivery'];
+	
+
+		}
+		
+	    $updatedXml = $webService->edit([
+		    'resource' => 'carts',
+	    	'id' => $request->id,
+		    'putXml' => $new_row->asXML()
+		]);
+
+	    return ['Modificación exitosa'];
 
     }
 
