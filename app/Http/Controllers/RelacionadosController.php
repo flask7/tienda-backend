@@ -141,7 +141,7 @@ class RelacionadosController extends Controller
 
 					array_push($datos, ['id' => $id_producto, 'precio' => $precio, 'nombre' => $json["products"][$i]['name'], 'imagen' =>  $base64]);
 
-				}else{
+				} else {
 
 					$base64 = 'paso';
 

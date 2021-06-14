@@ -196,26 +196,33 @@ class productos_data extends Controller
 					$descuento = 0;
 					$monto_descuento = 0;
 
-					for ($z = 0; $z < count($json_descuentos["specific_prices"]); $z++) {
-							
-						if ($json_descuentos["specific_prices"][$z]["id_product"] == $json2["products"][$x]["id"]) {
+					if ($json_descuentos != null) {
+						
+						if (array_key_exists('specific_prices', $json_descuentos)) {
 
-							$descuento = floatval($json_descuentos["specific_prices"][$z]["reduction"]);
+							for ($z = 0; $z < count($json_descuentos["specific_prices"]); $z++) {
+									
+								if ($json_descuentos["specific_prices"][$z]["id_product"] == $json2["products"][$x]["id"]) {
 
-							if ($json_descuentos["specific_prices"][$z]["reduction_type"] == 'percentage' && $json_descuentos["specific_prices"][$z]["id_customer"] == '0') {
+									$descuento = floatval($json_descuentos["specific_prices"][$z]["reduction"]);
 
-								$monto_descuento = $porcentaje_impuesto * $descuento;
+									if ($json_descuentos["specific_prices"][$z]["reduction_type"] == 'percentage' && $json_descuentos["specific_prices"][$z]["id_customer"] == '0') {
 
-							} else if ($json_descuentos["specific_prices"][$z]["reduction_type"] == 'amount' && $json_descuentos["specific_prices"][$z]["id_customer"] == '0') {
+										$monto_descuento = $porcentaje_impuesto * $descuento;
 
-								$monto_descuento = $descuento;
+									} else if ($json_descuentos["specific_prices"][$z]["reduction_type"] == 'amount' && $json_descuentos["specific_prices"][$z]["id_customer"] == '0') {
+
+										$monto_descuento = $descuento;
+
+									}
+										
+								}
+
+								$precio = $porcentaje_impuesto - $monto_descuento;
+								$json2["products"][$x]["price"] = strval($precio);
 
 							}
-								
 						}
-
-						$precio = $porcentaje_impuesto - $monto_descuento;
-						$json2["products"][$x]["price"] = strval($precio);
 
 					}
 

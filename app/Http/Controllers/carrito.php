@@ -93,7 +93,7 @@ class carrito extends Controller
 
 						if (count($request->opciones) > 0) {
 
-							$resultados = $this->validar_combinacion($json2, $combinations, $request, $json);
+							$resultados = $this->validar_combinacion($v, $cantidad_comb, $json2, $combinations, $request, $json);
 							$v = $resultados[0];
 							$cantidad_comb = $resultados[1];
 							$combinations = $resultados[2];
@@ -266,6 +266,7 @@ class carrito extends Controller
 			        $xml->cart->id_address_invoice = $request->direccion;
 			        $xml->cart->id_currency = 1;
 			        $xml->cart->id_lang = 1;
+			        $xml->cart->id_carrier = 28;
 			        $xml->cart->associations->cart_rows->cart_row->id_product = $request->id;
 			        $xml->cart->associations->cart_rows->cart_row->quantity = $request->quantity;
 					$xml->cart->associations->cart_rows->cart_row->id_product_attribute = $id_combinacion;
@@ -295,7 +296,7 @@ class carrito extends Controller
 
     }
 
-    public function validar_combinacion($json2, $combinations, $request, $json)
+    public function validar_combinacion($v, $cantidad_comb, $json2, $combinations, $request, $json)
     {
    
     	for ($i = 0; $i < count($json2["combinations"]); $i++) { 
@@ -532,10 +533,8 @@ class carrito extends Controller
 					$curl2 = curl_init();
 					$filtro = implode('|', $ids);
 
-					//$filtro = $ids[0] . ',' . ($ids[count($ids) - 1]);
-
 					curl_setopt_array($curl2, array(
-					  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=[' . strval($filtro) . ']&display=full&output_format=JSON',
+					  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=[' . $filtro . ']&display=full&output_format=JSON',
 					  CURLOPT_RETURNTRANSFER => true,
 					  CURLOPT_ENCODING => '',
 					  CURLOPT_MAXREDIRS => 10,
@@ -568,6 +567,9 @@ class carrito extends Controller
 
 					}
 
+					$nuevos_precios = $this->calcular_impuestos($response2);
+					$response2 = $nuevos_precios;
+
 					$opciones_nombres_imploded = implode('|', $opciones_nombres);
 					$curlx = curl_init();
 
@@ -590,12 +592,15 @@ class carrito extends Controller
 
 					curl_close($curlx);
 
-					$curl4 = curl_init();
 					$valor_atributos = [];
 
-					for ($i = 0; $i < count($jsonx["product_option_values"]); $i++) { 
+					if (array_key_exists("product_option_values", $jsonx)) {
+					
+						for ($i = 0; $i < count($jsonx["product_option_values"]); $i++) { 
 						
-						array_push($valor_atributos, $jsonx['product_option_values'][$i]['id_attribute_group']);
+							array_push($valor_atributos, $jsonx['product_option_values'][$i]['id_attribute_group']);
+
+						}
 
 					}
 
@@ -603,7 +608,7 @@ class carrito extends Controller
 					$curl3 = curl_init();
 
 					curl_setopt_array($curl3, array(
-					  CURLOPT_URL => 'https://www.wonduu.com/api/product_options?display=full&output_format=JSON&filter[id]=' . $valor_atributos_imploded . ']',
+					  CURLOPT_URL => 'https://www.wonduu.com/api/product_options?display=full&output_format=JSON&filter[id]=[' . $valor_atributos_imploded . ']',
 					  CURLOPT_RETURNTRANSFER => true,
 					  CURLOPT_ENCODING => '',
 					  CURLOPT_MAXREDIRS => 10,
@@ -620,7 +625,7 @@ class carrito extends Controller
 
 					curl_close($curl3);
 
-					return [$response, $response2, $response3];
+					return [$response, $response2, $response3, $jsonx];
 
 				} else {
 
@@ -644,14 +649,7 @@ class carrito extends Controller
 
     public function modificar_producto_carrito(Request $request)
     {
-    	$webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
-    	$new_row = $webService->get([
-
-		   'resource' => 'carts',
-		   'id' => $request->id
-
-		]);
-
+    	
     	$curl = curl_init();
 
 		curl_setopt_array($curl, array(
@@ -669,12 +667,24 @@ class carrito extends Controller
 		));
 
 		$json = json_decode(curl_exec($curl), true);
+
+		curl_close($curl);
+
 		$cart = [];
 		$id_carrito = count($json['carts']) - 1;
+		$webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
+    	
+    	$new_row = $webService->get([
+
+		   'resource' => 'carts',
+		   'id' => $json['carts'][$id_carrito]['id']
+
+		]);
+
 		$curl_combinacion = curl_init();
 
 		curl_setopt_array($curl_combinacion, array(
-		  CURLOPT_URL =>'https://www.wonduu.com/api/combinations?display=full&output_format=JSON&filter[id_product]=' . $request->id_product,
+		  CURLOPT_URL =>'https://www.wonduu.com/api/combinations?display=full&output_format=JSON&filter[id_product]=' . $request->id,
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => '',
 		  CURLOPT_MAXREDIRS => 10,
@@ -689,7 +699,7 @@ class carrito extends Controller
 
 		$json_combinacion = json_decode(curl_exec($curl_combinacion), true);
 		
-		curl_close($curl, $curl_combinacion);
+		curl_close($curl_combinacion);
 
 		if (array_key_exists('associations', $json['carts'][$id_carrito])) {
 
@@ -716,19 +726,27 @@ class carrito extends Controller
 
 		for ($i = 0; $i < count($json_combinacion["combinations"]); $i++) { 
 			
+			$array_combinacion = [];
+
 			for ($y = 0; $y < count($json_combinacion["combinations"][$i]["associations"]["product_option_values"]); $y++) { 
 				
-				if ($opciones_array == $json_combinacion["combinations"][$i]["associations"]["product_option_values"][$y]) {
-					
-					$nueva_combinacion = $opciones_array == $json_combinacion["combinations"][$i]["id"];
+				array_push($array_combinacion, $json_combinacion["combinations"][$i]["associations"]["product_option_values"][$y]["id"]);
 
-					if (floatval($json_combinacion["combinations"][$i]["quantity"]) < float($request->quantity)) {
-						
-						return ["La cantidad del producto: " . $request->nombre . " ha sido excedida, existencia: " . $json_combinacion["combinations"][$i]["quantity"]];
+				if ($y == count($json_combinacion["combinations"][$i]["associations"]["product_option_values"]) - 1) {
+					
+					if (sort($opciones_array) == sort($array_combinacion)) {
+					
+						$nueva_combinacion = $json_combinacion["combinations"][$i]["id"];
+
+						if (floatval($json_combinacion["combinations"][$i]["quantity"]) < floatval($request->quantity)) {
+							
+							return ["La cantidad del producto ha sido excedida, existencia: " . $json_combinacion["combinations"][$i]["quantity"]];
+
+						}
+
+						break;
 
 					}
-
-					break;
 
 				}
 
@@ -743,7 +761,7 @@ class carrito extends Controller
 				if ($request->opciones) {
 
 					if (count($request->opciones) > 0) {
-						
+
 						$new_row->cart->associations->cart_rows->cart_row[$y]->id_product_attribute = $nueva_combinacion;
 						
 					}
@@ -767,11 +785,126 @@ class carrito extends Controller
 		
 	    $updatedXml = $webService->edit([
 		    'resource' => 'carts',
-	    	'id' => $request->id,
+	    	'id' => $json['carts'][$id_carrito]['id'],
 		    'putXml' => $new_row->asXML()
 		]);
 
 	    return ['Modificación exitosa'];
+
+    }
+
+    public function calcular_impuestos($json)
+    {
+
+		for ($i = 0; $i < count($json["products"]); $i++) { 
+
+			$id_producto = $json["products"][$i]["id"];
+			$curl_descuentos = curl_init();
+
+			curl_setopt_array($curl_descuentos, array(
+			  CURLOPT_URL => 'https://www.wonduu.com/api/specific_prices?display=[reduction,reduction_type,id_customer]&limit=1&filter[id_product]=' . $id_producto . '&output_format=JSON',
+			  CURLOPT_RETURNTRANSFER => true,
+			  CURLOPT_ENCODING => '',
+			  CURLOPT_MAXREDIRS => 10,
+			  CURLOPT_TIMEOUT => 0,
+			  CURLOPT_FOLLOWLOCATION => true,
+			  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			  CURLOPT_CUSTOMREQUEST => 'GET',
+			  CURLOPT_HTTPHEADER => array(
+			    'Content-Type: text/xml',
+			    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
+			  ),
+			));
+
+			$responsed = curl_exec($curl_descuentos);
+			$json_descuentos = json_decode($responsed, true);
+
+			curl_close($curl_descuentos);
+
+			$impuestos = 1;
+
+			if (array_key_exists("id_tax_rules_group", $json['products'][$i])) {
+				
+				$curl_impuestos = curl_init();
+
+				curl_setopt_array($curl_impuestos, array(
+						CURLOPT_URL => 'https://www.wonduu.com/api/tax_rules?filter[id_tax_rules_group]=' . $json['products'][$i]['id_tax_rules_group'] . '&limit=1&filter[id_country]=6&output_format=JSON&display=[id_tax]',
+						CURLOPT_RETURNTRANSFER => true,
+						CURLOPT_ENCODING => '',
+						CURLOPT_MAXREDIRS => 10,
+						CURLOPT_TIMEOUT => 0,
+						CURLOPT_FOLLOWLOCATION => true,
+						CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+						CURLOPT_CUSTOMREQUEST => 'GET',
+						CURLOPT_HTTPHEADER => array(
+						'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
+						),
+					));
+
+				$response_impuestos = curl_exec($curl_impuestos);
+
+				curl_close($curl_impuestos);
+
+				$json_impuestos = json_decode($response_impuestos, true);
+				$curl_porcentaje_impuestos = curl_init();
+
+				curl_setopt_array($curl_porcentaje_impuestos, array(
+				  CURLOPT_URL => 'https://www.wonduu.com/api/taxes?filter[id]=' . $json_impuestos["tax_rules"][0]["id_tax"] . '&output_format=JSON&display=[rate]',
+				  CURLOPT_RETURNTRANSFER => true,
+				  CURLOPT_ENCODING => '',
+				  CURLOPT_MAXREDIRS => 10,
+				  CURLOPT_TIMEOUT => 0,
+				  CURLOPT_FOLLOWLOCATION => true,
+				  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+				  CURLOPT_CUSTOMREQUEST => 'GET',
+				  CURLOPT_HTTPHEADER => array(
+				    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
+				  ),
+				));
+
+				$response_porcentaje_impuestos = curl_exec($curl_porcentaje_impuestos);
+				$json_porcentaje_impuestos = json_decode($response_porcentaje_impuestos, true);
+
+				curl_close($curl_porcentaje_impuestos);
+
+				$impuestos = floatval($json_porcentaje_impuestos["taxes"][0]['rate'])/100;
+			}
+
+			$precio_base = floatval($json["products"][$i]['price']);
+			$porcentaje_impuesto = ($precio_base * $impuestos) + $precio_base;
+			$descuento = 0;
+			$monto_descuento = 0;
+
+			if ($json_descuentos != null) {
+				
+				if (array_key_exists("specific_prices", $json_descuentos)) {
+
+					if (array_key_exists('specific_prices', $json_descuentos)) {
+						
+						$descuento = floatval($json_descuentos["specific_prices"][0]["reduction"]);
+
+						if ($json_descuentos["specific_prices"][0]["reduction_type"] == 'percentage' && $json_descuentos["specific_prices"][0]["id_customer"] == '0') {
+
+							$monto_descuento = $porcentaje_impuesto * $descuento;
+									
+						} else if ($json_descuentos["specific_prices"][0]["reduction_type"] == 'amount' && $json_descuentos["specific_prices"][0]["id_customer"] == '0') {
+
+							$monto_descuento = $descuento;
+
+						}
+
+					}
+
+				} 
+
+			}
+
+			$precio = $porcentaje_impuesto - $monto_descuento;
+			$json["products"][$i]["price"] = $precio;
+
+		}
+
+		return $json;
 
     }
 

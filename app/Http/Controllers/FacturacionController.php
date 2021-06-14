@@ -68,7 +68,7 @@ class FacturacionController extends Controller
         $lang = '1';
         $c_rate = '1';
         $c_state = '75';
-        $carrier = '3';
+        $carrier = '28';
         $currency = '1';
         $modulo = 'ps_wirepayment';
         $total = strval($json_carts['carts'][$id_carrito]['order_total']);
@@ -240,7 +240,7 @@ class FacturacionController extends Controller
 
               $key = config('redsys.key');
 
-              Redsys::setAmount(rand(10,600));
+              Redsys::setAmount(rand($request->monto));
               Redsys::setOrder(time());
               Redsys::setMerchantcode('346311483'); //Reemplazar por el código que proporciona el banco
               Redsys::setCurrency('1');
@@ -371,8 +371,9 @@ class FacturacionController extends Controller
         curl_close($curl3);
 
         $json3 = json_decode($response3, true);
+        $total_envio = 4.10 * count($json["orders"][0]["associations"]["order_rows"]);
 
-        return [$json, $json2, $json3];
+        return [$json, $json2, $json3, $total_envio];
 
       }
 
@@ -485,6 +486,35 @@ class FacturacionController extends Controller
       $newOrderFields = $newCartsFields->id;
 
       return [$respuesta, $newOrderFields];
+
+    }
+
+    public function total_orden(Request $request)
+    {
+      
+      $curl = curl_init();
+
+      curl_setopt_array($curl, array(
+        CURLOPT_URL => 'https://www.wonduu.com/api/carts?filter[id_customer]=' . $request->id . '&display=full&output_format=JSON',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 0,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => 'GET',
+        CURLOPT_HTTPHEADER => array(
+          'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
+          ),
+      ));
+
+      $response = curl_exec($curl);
+      $json = json_decode($response, true);
+      $indice = count($json["carts"]) - 1;
+      $envio = count($json["carts"][$indice]["associations"]["cart_rows"]) * 4.10;
+      $total = floatval($envio) + floatval($json["carts"][$indice]["order_total"]);
+
+      return [$total];
 
     }
 
