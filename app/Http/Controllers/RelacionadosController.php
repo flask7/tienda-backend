@@ -137,7 +137,7 @@ class RelacionadosController extends Controller
 					}
 
 					$precio = $porcentaje_impuesto - $monto_descuento;
-					$base64 = base64_encode(file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $id_producto . '/' . $json["products"][$i]['id_default_image'] . '/small_default'));
+					$base64 = base64_encode(@file_get_contents('https://4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP@www.wonduu.com/api/images/products/' . $id_producto . '/' . $json["products"][$i]['id_default_image'] . '/small_default'));
 
 					array_push($datos, ['id' => $id_producto, 'precio' => $precio, 'nombre' => $json["products"][$i]['name'], 'imagen' =>  $base64]);
 

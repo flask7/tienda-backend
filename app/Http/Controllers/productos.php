@@ -57,10 +57,74 @@ class productos extends Controller
 		));
 
 		$response = curl_exec($curl);
-
+		$json = json_decode($response, true);
+		
 		curl_close($curl);
 		
-		$json = json_decode($response, true);
+		$json_migas_pan = json_decode($response, true);
+		$curl_migas_pan_2 = curl_init();
+		$id_categoria = $json['products'][0]['id_category_default'];
+		$ruta = null;
+
+		curl_setopt_array($curl_migas_pan_2, array(
+		  CURLOPT_URL => 'https://www.wonduu.com/api/categories?filter[id]=' . $id_categoria . '&display=[id_parent,name]&output_format=JSON',
+		  CURLOPT_RETURNTRANSFER => true,
+		  CURLOPT_ENCODING => '',
+		  CURLOPT_MAXREDIRS => 10,
+		  CURLOPT_TIMEOUT => 0,
+		  CURLOPT_FOLLOWLOCATION => true,
+		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+		  CURLOPT_CUSTOMREQUEST => 'GET',
+		  CURLOPT_HTTPHEADER => array(
+		    'Content-Type: text/xml',
+		    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
+		  ),
+		));
+
+		$response_migas_pan_2 = curl_exec($curl_migas_pan_2);
+
+		curl_close($curl_migas_pan_2);
+		
+		$json_migas_pan_2 = json_decode($response_migas_pan_2, true);
+		$id_categoria = $json_migas_pan_2['categories'][0]['id_parent'];
+		$ruta = $json_migas_pan_2['categories'][0]['name'];
+
+		while (true) {
+			
+			$curl_migas_pan_3 = curl_init();
+
+			curl_setopt_array($curl_migas_pan_3, array(
+			  CURLOPT_URL => 'https://www.wonduu.com/api/categories?filter[id]=' . $id_categoria . '&display=[id_parent,name]&output_format=JSON',
+			  CURLOPT_RETURNTRANSFER => true,
+			  CURLOPT_ENCODING => '',
+			  CURLOPT_MAXREDIRS => 10,
+			  CURLOPT_TIMEOUT => 0,
+			  CURLOPT_FOLLOWLOCATION => true,
+			  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			  CURLOPT_CUSTOMREQUEST => 'GET',
+			  CURLOPT_HTTPHEADER => array(
+			    'Content-Type: text/xml',
+			    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
+			  ),
+			));
+
+			$response_migas_pan_3 = curl_exec($curl_migas_pan_3);
+
+			curl_close($curl_migas_pan_3);
+			
+			$json_migas_pan_3 = json_decode($response_migas_pan_3, true);
+			$id_categoria = $json_migas_pan_3['categories'][0]['id_parent'];
+
+			if (intval($id_categoria) == 1) {
+
+				break;
+
+			}
+
+			$ruta .= ' > ' . $json_migas_pan_3['categories'][0]['name'];
+
+		}
+
 		$curl_descuentos = curl_init();
 
 		curl_setopt_array($curl_descuentos, array(
@@ -254,7 +318,7 @@ class productos extends Controller
 
 			} 
 
-			$arrays =  [$json, $img, $opciones, $nombre_opciones, $json_porcentaje_impuestos];
+			$arrays =  [$json, $img, $opciones, $nombre_opciones, $json_porcentaje_impuestos, $ruta];
 
 			return $arrays;
 
@@ -289,7 +353,7 @@ class productos extends Controller
 
 			} 
 
-			$arrays = [$json, $img, $json_porcentaje_impuestos];
+			$arrays = [$json, $img, $json_porcentaje_impuestos, $ruta];
 
 			return $arrays;
 

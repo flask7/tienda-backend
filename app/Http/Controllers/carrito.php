@@ -131,6 +131,10 @@ class carrito extends Controller
 
 								$v = $resultados[0];
 
+							} else {
+
+								$v = $json_productos["products"][0]["id_default_combination"];
+
 							}
 
 						}
@@ -162,6 +166,18 @@ class carrito extends Controller
 
 							$v = $resultados[0];
 
+						} else {
+
+							if (array_key_exists('id_default_combination', $json_productos['products'][0])) {
+
+								$v = $json_productos["products"][0]["id_default_combination"];
+
+							} else {
+
+								$v = '0';
+
+							}
+
 						}
 
 					}
@@ -184,13 +200,7 @@ class carrito extends Controller
 					$aux = [];
 					$aux['id_product'] = $request->id;
 					$aux['id_address_delivery'] = $request->direccion;
-
-					if ($v != null) {
-
-						$aux['id_product_attribute'] = $v;
-
-					}
-					
+					$aux['id_product_attribute'] = $v;
 					$aux['quantity'] = $request->quantity;
 					$cart[] = $aux;
 
@@ -198,13 +208,7 @@ class carrito extends Controller
 						
 						$new_row->cart->associations->cart_rows->cart_row[$y]->id_product = $cart[$y]['id_product'];
 						$new_row->cart->associations->cart_rows->cart_row[$y]->id_address_delivery = $cart[$y]['id_address_delivery'];
-
-						if ($v != null) {
-
-							$new_row->cart->associations->cart_rows->cart_row[$y]->id_product_attribute = $cart[$y]['id_product_attribute'];
-
-						}
-
+						$new_row->cart->associations->cart_rows->cart_row[$y]->id_product_attribute = $cart[$y]['id_product_attribute'];
 						$new_row->cart->associations->cart_rows->cart_row[$y]->quantity = $cart[$y]['quantity'];
 			
 					}
@@ -411,7 +415,7 @@ class carrito extends Controller
     }
 
     public function eliminar_carrito(Request $request) {
-    	
+
     	$webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
 		$id = $request->id_customer;
 		$curl = curl_init();
@@ -447,10 +451,11 @@ class carrito extends Controller
 
 		for ($y = 0; $y < count($cart); $y++) {
 			
-			if ($y == intval($request->id) && $contador < 1) {
+			if ($y === intval($request->id) && $contador < 1) {
 				
 				$contador++;
 				unset($new_row->cart->associations->cart_rows->cart_row[$y]);
+				break;
 	
 			} else {
 
@@ -553,79 +558,91 @@ class carrito extends Controller
 
 					$opciones_nombres = [];
 
-					for ($x = 0; $x < count($response2["products"]); $x++) { 
-						
-						if (array_key_exists('associations', $response2["products"][$x])) {
+					if (array_key_exists('products', $response2)) {
+
+						for ($x = 0; $x < count($response2["products"]); $x++) { 
 							
-							for ($i = 0; $i < count($response2["products"][$x]["associations"]["product_option_values"]); $i++) { 
-								
-								array_push($opciones_nombres, $response2["products"][$x]["associations"]["product_option_values"][$i]["id"]);
+							if (array_key_exists('associations', $response2["products"][$x])) {
+
+								if (array_key_exists('product_option_values', $response2["products"][$x]['associations'])) {
+									
+									for ($i = 0; $i < count($response2["products"][$x]["associations"]["product_option_values"]); $i++) { 
+									
+										array_push($opciones_nombres, $response2["products"][$x]["associations"]["product_option_values"][$i]["id"]);
+
+									}
+										
+								}
 
 							}
 
 						}
 
-					}
+						$nuevos_precios = $this->calcular_impuestos($response2);
+						$response2 = $nuevos_precios;
 
-					$nuevos_precios = $this->calcular_impuestos($response2);
-					$response2 = $nuevos_precios;
+						$opciones_nombres_imploded = implode('|', $opciones_nombres);
+						$curlx = curl_init();
 
-					$opciones_nombres_imploded = implode('|', $opciones_nombres);
-					$curlx = curl_init();
+						curl_setopt_array($curlx, array(
+						  CURLOPT_URL => 'https://www.wonduu.com/api/product_option_values?filter[id]=[' . $opciones_nombres_imploded . ']&display=full&output_format=JSON',
+						  CURLOPT_RETURNTRANSFER => true,
+						  CURLOPT_ENCODING => '',
+						  CURLOPT_MAXREDIRS => 10,
+						  CURLOPT_TIMEOUT => 0,
+						  CURLOPT_FOLLOWLOCATION => true,
+						  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+						  CURLOPT_CUSTOMREQUEST => 'GET',
+						  CURLOPT_HTTPHEADER => array(
+						    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
+						  ),
+						));
 
-					curl_setopt_array($curlx, array(
-					  CURLOPT_URL => 'https://www.wonduu.com/api/product_option_values?filter[id]=[' . $opciones_nombres_imploded . ']&display=full&output_format=JSON',
-					  CURLOPT_RETURNTRANSFER => true,
-					  CURLOPT_ENCODING => '',
-					  CURLOPT_MAXREDIRS => 10,
-					  CURLOPT_TIMEOUT => 0,
-					  CURLOPT_FOLLOWLOCATION => true,
-					  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-					  CURLOPT_CUSTOMREQUEST => 'GET',
-					  CURLOPT_HTTPHEADER => array(
-					    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
-					  ),
-					));
+						$responsex = curl_exec($curlx);
+						$jsonx = json_decode($responsex, true);
 
-					$responsex = curl_exec($curlx);
-					$jsonx = json_decode($responsex, true);
+						curl_close($curlx);
 
-					curl_close($curlx);
+						$valor_atributos = [];
 
-					$valor_atributos = [];
-
-					if (array_key_exists("product_option_values", $jsonx)) {
-					
-						for ($i = 0; $i < count($jsonx["product_option_values"]); $i++) { 
+						if (array_key_exists("product_option_values", $jsonx)) {
 						
-							array_push($valor_atributos, $jsonx['product_option_values'][$i]['id_attribute_group']);
+							for ($i = 0; $i < count($jsonx["product_option_values"]); $i++) { 
+							
+								array_push($valor_atributos, $jsonx['product_option_values'][$i]['id_attribute_group']);
+
+							}
 
 						}
 
+						$valor_atributos_imploded = implode('|', $valor_atributos);
+						$curl3 = curl_init();
+
+						curl_setopt_array($curl3, array(
+						  CURLOPT_URL => 'https://www.wonduu.com/api/product_options?display=full&output_format=JSON&filter[id]=[' . $valor_atributos_imploded . ']',
+						  CURLOPT_RETURNTRANSFER => true,
+						  CURLOPT_ENCODING => '',
+						  CURLOPT_MAXREDIRS => 10,
+						  CURLOPT_TIMEOUT => 0,
+						  CURLOPT_FOLLOWLOCATION => true,
+						  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+						  CURLOPT_CUSTOMREQUEST => 'GET',
+						  CURLOPT_HTTPHEADER => array(
+						    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
+						    ),
+						));
+
+						$response3 = json_decode(curl_exec($curl3), true);
+
+						curl_close($curl3);
+
+						return [$response, $response2, $response3, $jsonx];
+
+					} else {
+
+						return [];
+
 					}
-
-					$valor_atributos_imploded = implode('|', $valor_atributos);
-					$curl3 = curl_init();
-
-					curl_setopt_array($curl3, array(
-					  CURLOPT_URL => 'https://www.wonduu.com/api/product_options?display=full&output_format=JSON&filter[id]=[' . $valor_atributos_imploded . ']',
-					  CURLOPT_RETURNTRANSFER => true,
-					  CURLOPT_ENCODING => '',
-					  CURLOPT_MAXREDIRS => 10,
-					  CURLOPT_TIMEOUT => 0,
-					  CURLOPT_FOLLOWLOCATION => true,
-					  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-					  CURLOPT_CUSTOMREQUEST => 'GET',
-					  CURLOPT_HTTPHEADER => array(
-					    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
-					    ),
-					));
-
-					$response3 = json_decode(curl_exec($curl3), true);
-
-					curl_close($curl3);
-
-					return [$response, $response2, $response3, $jsonx];
 
 				} else {
 
@@ -724,27 +741,34 @@ class carrito extends Controller
 
 		}
 
-		for ($i = 0; $i < count($json_combinacion["combinations"]); $i++) { 
-			
-			$array_combinacion = [];
+		if (array_key_exists('combinations', $json_combinacion)) {
 
-			for ($y = 0; $y < count($json_combinacion["combinations"][$i]["associations"]["product_option_values"]); $y++) { 
+			for ($i = 0; $i < count($json_combinacion["combinations"]); $i++) { 
 				
-				array_push($array_combinacion, $json_combinacion["combinations"][$i]["associations"]["product_option_values"][$y]["id"]);
+				$array_combinacion = [];
 
-				if ($y == count($json_combinacion["combinations"][$i]["associations"]["product_option_values"]) - 1) {
+				for ($y = 0; $y < count($json_combinacion["combinations"][$i]["associations"]["product_option_values"]); $y++) { 
 					
-					if (sort($opciones_array) == sort($array_combinacion)) {
-					
-						$nueva_combinacion = $json_combinacion["combinations"][$i]["id"];
+					array_push($array_combinacion, $json_combinacion["combinations"][$i]["associations"]["product_option_values"][$y]["id"]);
 
-						if (floatval($json_combinacion["combinations"][$i]["quantity"]) < floatval($request->quantity)) {
-							
-							return ["La cantidad del producto ha sido excedida, existencia: " . $json_combinacion["combinations"][$i]["quantity"]];
+					if ($y === count($json_combinacion["combinations"][$i]["associations"]["product_option_values"]) - 1) {
+
+						sort($opciones_array);
+						sort($array_combinacion);
+
+						if ($opciones_array === $array_combinacion) {
+
+							$nueva_combinacion = $json_combinacion["combinations"][$i]["id"];
+
+							if (floatval($json_combinacion["combinations"][$i]["quantity"]) < floatval($request->quantity)) {
+								
+								return ["La cantidad del producto ha sido excedida, existencia: " . $json_combinacion["combinations"][$i]["quantity"]];
+
+							}
+
+							break;
 
 						}
-
-						break;
 
 					}
 
@@ -752,6 +776,38 @@ class carrito extends Controller
 
 			}
 
+		} else {
+
+			$curl_cantidad = curl_init();
+
+			curl_setopt_array($curl_cantidad, array(
+			  CURLOPT_URL => 'https://www.wonduu.com/api/products?display=[name,quantity,id_default_combination]&filter[id]=' . $request->id . '&output_format=JSON',
+			  CURLOPT_RETURNTRANSFER => true,
+			  CURLOPT_ENCODING => '',
+			  CURLOPT_MAXREDIRS => 10,
+			  CURLOPT_TIMEOUT => 0,
+			  CURLOPT_FOLLOWLOCATION => true,
+			  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			  CURLOPT_CUSTOMREQUEST => 'GET',
+			  CURLOPT_HTTPHEADER => array(
+			    'Content-Type: text/xml',
+			    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A='
+			  ),
+			));
+
+			$responsep = curl_exec($curl_cantidad);
+			$json_cantidad = json_decode($responsep, true);
+
+			curl_close($curl_cantidad);
+
+			if (floatval($json_cantidad["products"][0]["quantity"]) < floatval($request->quantity)) {
+								
+				return ["La cantidad del producto ha sido excedida, existencia: " . $json_cantidad["products"][0]["quantity"]];
+
+			}
+
+			$nueva_combinacion = $json_cantidad["products"][0]["id_default_combination"];
+			
 		}
 
 		for ($y = 0; $y < count($cart); $y++){

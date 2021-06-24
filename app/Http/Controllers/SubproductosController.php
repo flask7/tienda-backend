@@ -9,17 +9,52 @@ class SubproductosController extends Controller
     public function sub_productos(Request $request){
 
     	$categoria = $request->categoria;
-	   	$curl = curl_init();
-	   	$limite = '';
+	   	$pagina_actual = strval($request->pagina);
+	   	$curl_productos = curl_init();
 
-	   	if ($categoria == 130) {
+	   	curl_setopt_array($curl_productos, array(
+		  CURLOPT_URL => 'https://www.wonduu.com/api/categories?display=full&output_format=JSON&filter[id]=' . $categoria,
+		  CURLOPT_RETURNTRANSFER => true,
+		  CURLOPT_ENCODING => '',
+		  CURLOPT_MAXREDIRS => 10,
+		  CURLOPT_TIMEOUT => 0,
+		  CURLOPT_FOLLOWLOCATION => true,
+		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+		  CURLOPT_CUSTOMREQUEST => 'GET',
+		  CURLOPT_HTTPHEADER => array(
+		    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A'
+		  ),
+		));
 
-	   		$limite = '&limit=50';	
-	   		
-	   	}
+		$response_productos = curl_exec($curl_productos);
+		$json_productos = json_decode($response_productos, true);
+
+		if (!array_key_exists('associations', $json_productos['categories'][0])) {
+			
+			return [];
+
+		}
+
+		if (!array_key_exists('products', $json_productos['categories'][0]['associations'])) {
+			
+			return [];
+
+		}
+
+		$curl = curl_init();
+		$productos_ids = [];
+
+		for ($i = 0; $i < count($json_productos['categories'][0]['associations']['products']); $i++) { 
+			
+			array_push($productos_ids, $json_productos['categories'][0]['associations']['products'][$i]['id']);
+
+		}
+
+		$productos_imploded = implode('|', $productos_ids);
+		$datos = ['id_producto' => [], 'precio' => [], 'nombre' => [], 'imagen' => ['id_imagen' => [], 'base64' => []], 'paginas' => count($productos_ids)/30];
 
 		curl_setopt_array($curl, array(
-		  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id_category_default]=' . $categoria . '&display=[id,price,name,id_default_image,id_tax_rules_group]&output_format=JSON' . $limite,
+		  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=[' . $productos_imploded . ']&display=[id,price,name,id_default_image,id_tax_rules_group]&output_format=JSON&limit=' . $pagina_actual . ',30',
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => '',
 		  CURLOPT_MAXREDIRS => 10,
@@ -36,8 +71,6 @@ class SubproductosController extends Controller
 		$json = json_decode($response, true);
 
 		curl_close($curl);
-
-		$datos = ['id_producto' => [], 'precio' => [], 'nombre' => [], 'imagen' => ['id_imagen' => [], 'base64' => []]];
 
 		for ($i = 0; $i < count($json["products"]); $i++) { 
 

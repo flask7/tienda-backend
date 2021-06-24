@@ -371,7 +371,7 @@ class FacturacionController extends Controller
         curl_close($curl3);
 
         $json3 = json_decode($response3, true);
-        $total_envio = 4.10 * count($json["orders"][0]["associations"]["order_rows"]);
+        $total_envio = 4.84 /** count($json["orders"][0]["associations"]["order_rows"])*/;
 
         return [$json, $json2, $json3, $total_envio];
 
@@ -511,7 +511,7 @@ class FacturacionController extends Controller
       $response = curl_exec($curl);
       $json = json_decode($response, true);
       $indice = count($json["carts"]) - 1;
-      $envio = count($json["carts"][$indice]["associations"]["cart_rows"]) * 4.10;
+      $envio = 4.84;
       $total = floatval($envio) + floatval($json["carts"][$indice]["order_total"]);
 
       return [$total];
