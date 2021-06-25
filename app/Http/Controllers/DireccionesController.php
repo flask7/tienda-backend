@@ -37,7 +37,7 @@ class DireccionesController extends Controller
 		$addressFields->phone_mobile = $request->telefono2;
 		$addressFields->dni = $request->identificacion;
 		$addressFields->company = $request->empresa;
-		$addressFields->alias = '-';
+		$addressFields->alias = $request->alias;
 
 		try {
 		
@@ -92,6 +92,7 @@ class DireccionesController extends Controller
 		$addressFields->phone_mobile = $request->telefono2;
 		$addressFields->dni = $request->identificacion;
 		$addressFields->company = $request->empresa;
+		$addressFields->alias = $request->alias;
 
 		$updatedXml = $webService->edit([
 		    'resource' => 'addresses',
