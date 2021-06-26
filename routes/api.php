@@ -89,8 +89,6 @@ Route::post('mensajes_clientes', [MensajesController::class, 'mensajes_clientes'
 
 Route::post('orden_pago', [FacturacionController::class, 'orden_pago']);
 
-
-Route::get('orden_pago', [FacturacionController::class, 'orden_pago']);
 Route::get('completado', [FacturacionController::class, 'completado']);
 
 Route::post('facturas', [FacturacionController::class, 'facturas']);
