@@ -51,7 +51,7 @@ class productos_data extends Controller
 			$curl2 = curl_init();
 
 	   		curl_setopt_array($curl2, array(
-			  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id_category_default]=[' . $categorias_imploded . ']&display=[id,price,name,id_default_image,id_category_default,id_tax_rules_group]&output_format=JSON',
+			  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id_category_default]=[' . $categorias_imploded . ']&display=[id,price,name,id_default_image,id_category_default,id_tax_rules_group]&output_format=JSON&filter[available_for_order]=1',
 			  CURLOPT_RETURNTRANSFER => true,
 			  CURLOPT_ENCODING => '',
 			  CURLOPT_MAXREDIRS => 10,

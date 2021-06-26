@@ -14,7 +14,7 @@ class RelacionadosController extends Controller
     	$curl = curl_init();
 
 		curl_setopt_array($curl, array(
-		  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id_category_default]=' . $categoria . '&display=full&limit=4&output_format=JSON',
+		  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id_category_default]=' . $categoria . '&display=full&limit=4&output_format=JSON&filter[available_for_order]=1',
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => '',
 		  CURLOPT_MAXREDIRS => 10,

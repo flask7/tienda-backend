@@ -89,14 +89,20 @@ Route::post('mensajes_clientes', [MensajesController::class, 'mensajes_clientes'
 
 Route::post('orden_pago', [FacturacionController::class, 'orden_pago']);
 
+Route::get('orden_pago', [FacturacionController::class, 'orden_pago']);
+Route::get('completado', [FacturacionController::class, 'completado']);
+
 Route::post('facturas', [FacturacionController::class, 'facturas']);
 
 Route::post('historial_pedidos', [FacturacionController::class, 'historial_pedidos']);
 
-Route::post('pago', [FacturacionController::class, 'index']);
+// Route::post('pago', [FacturacionController::class, 'index']);
 
 Route::post('pedidos_info', [FacturacionController::class, 'pedidos_info']);
 
 Route::post('repetir_pedido', [FacturacionController::class, 'repetir_pedido']);
 
 Route::post('total_orden', [FacturacionController::class, 'total_orden']);
+
+
+Route::get('pagar', [FacturacionController::class, 'index']);

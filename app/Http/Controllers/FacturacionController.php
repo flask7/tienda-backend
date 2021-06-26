@@ -9,9 +9,26 @@ use Ssheduardo\Redsys\Facades\Redsys;
 
 class FacturacionController extends Controller
 {
+    public function completado(){
+      return view('completed');
+    }
     public function orden_pago(Request $request){
 
       if ($request->id_carrito) {
+
+        $key = 'JrcKh4xhnFPm2s/z/3YOVHtEzApFZ6Oq';
+        $parameters = Redsys::getMerchantParameters($request->input('Ds_MerchantParameters'));
+        $DsResponse = $parameters["Ds_Response"];
+        $DsResponse += 0;
+
+        if (Redsys::check($key, $request->input()) && $DsResponse <= 99) {
+            // lo que quieras que haya si es positiva la confirmación de redsys
+
+
+        } else {
+            //lo que quieras que haga si no es positivo
+
+        }
 
         $curlx = curl_init();
 
@@ -35,11 +52,11 @@ class FacturacionController extends Controller
 
         $json_carts = json_decode($response, true);
         $carts_strings = null;
-        $id_carrito = count($json_carts['carts']) - 1;
+        $id_carrito = $request->id_carrito;
 
-        if (array_key_exists('associations', $json_carts['carts'][$id_carrito])) {
+        if (array_key_exists('associations', $json_carts['carts'][0])) {
 
-          $cart = $json_carts['carts'][$id_carrito]['associations']['cart_rows'];
+          $cart = $json_carts['carts'][0]['associations']['cart_rows'];
 
         }
 
@@ -71,7 +88,8 @@ class FacturacionController extends Controller
         $carrier = '28';
         $currency = '1';
         $modulo = 'ps_wirepayment';
-        $total = strval($json_carts['carts'][$id_carrito]['order_total']);
+        $ship = strval($request->delivery);
+        $total = strval($json_carts['carts'][0]['order_total']);
         $curl = curl_init();
 
         curl_setopt_array($curl, array(
@@ -99,6 +117,7 @@ class FacturacionController extends Controller
               <total_paid_tax_excl>'. $total .'</total_paid_tax_excl>
               <total_paid_real>'. $total .'</total_paid_real>
               <total_products>'. $total .'</total_products>
+              <total_shipping>' . $ship . '</total_shipping>
               <total_products_wt>'. $total .'</total_products_wt>
               <associations>
                 <order_rows>' . $carts_strings . '</order_rows>
@@ -175,6 +194,8 @@ class FacturacionController extends Controller
               $xml_carts->cart->id_address_invoice = $request->id_direccion;
               $xml_carts->cart->id_currency = 1;
               $xml_carts->cart->id_lang = 1;
+              $xml_carts->cart->id_carrier = 28;
+              $xml_carts->cart->shipping_cost = '4.84000';
 
               $createdXml = $webService->add([
 
@@ -183,7 +204,7 @@ class FacturacionController extends Controller
 
               ]);
 
-              return ['Pedido realizado satisfactoriamente'];
+              return ['Pedido realizado satisfactoriamente', $orden_id];
 
           }else{
 
@@ -236,62 +257,71 @@ class FacturacionController extends Controller
 
     public function index(Request $request)
       {
+
+        $args = "id_carrito=".$request->id_carrito."&delivery=".$request->delivery."&id_direccion=".$request->id_direccion."&pago=".$request->pago."&id_cliente=".$request->id_cliente;
           try{
 
-              $key = config('redsys.key');
+              $key = 'JrcKh4xhnFPm2s/z/3YOVHtEzApFZ6Oq';
 
-              Redsys::setAmount(rand($request->monto));
+              Redsys::setAmount($request->monto);
               Redsys::setOrder(time());
               Redsys::setMerchantcode('346311483'); //Reemplazar por el código que proporciona el banco
-              Redsys::setCurrency('1');
+              Redsys::setCurrency('978');
               Redsys::setTransactiontype('0');
               Redsys::setTerminal('1');
               Redsys::setMethod('T'); //Solo pago con tarjeta, no mostramos iupay
-              Redsys::setNotification(config('redsys.url_notification')); //Url de notificacion
-              Redsys::setUrlOk(config('redsys.url_ok')); //Url OK
-              Redsys::setUrlKo(config('redsys.url_ko')); //Url KO
+              Redsys::setNotification(url('orden_pago?'.$args)); //Url de notificacion
+              Redsys::setUrlOk(url('completado')); //Url OK
+              Redsys::setUrlKo(url('error_pedido',$request->id_carrito)); //Url KO
               Redsys::setVersion('HMAC_SHA256_V1');
-              Redsys::setTradeName('Wonduu');
-              Redsys::setTitular('Grupo K2');
-              Redsys::setProductDescription('Compras por aplicación');
+              Redsys::setTradeName('GrupoK2');
+              Redsys::setTitular('GrupoK2');
+
+
+              // Redsys::setPan('4548812049400004'); //Número de la tarjeta
+              // Redsys::setExpiryDate('3412'); //AAMM (año y mes)
+              // Redsys::setCVV2('123'); //CVV2 de la tarjeta
+
+              Redsys::setProductDescription('Compras por la aplicación');
               Redsys::setEnviroment('live'); //Entorno test
 
               $signature = Redsys::generateMerchantSignature($key);
               Redsys::setMerchantSignature($signature);
 
-              $form = Redsys::createForm();
-              $parameters = Redsys::getMerchantParameters($request->input('Ds_MerchantParameters'));
-              $DsResponse = $parameters["Ds_Response"];
-              $DsResponse += 0;
+              return Redsys::executeRedirection();
+              // $parameters = Redsys::getMerchantParameters($request->input('Ds_MerchantParameters'));
 
-              if (Redsys::check($key, $request->input()) && $DsResponse <= 99) {
+              // $DsResponse = $parameters["Ds_Response"];
+              // $DsResponse += 0;
 
-                  // lo que quieras que haya si es positiva la confirmación de redsys
+              // if (Redsys::check($key, $request->input()) && $DsResponse <= 99) {
 
-                $webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
-                $id = $request->id;
-                $xml = $webService->get([
+              //     // lo que quieras que haya si es positiva la confirmación de redsys
 
-                   'resource' => 'orders',
-                   'id' => intval($id),
+              //   // $webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
+              //   // $id = $request->id;
+              //   // $xml = $webService->get([
 
-                ]);
+              //   //    'resource' => 'orders',
+              //   //    'id' => intval($id),
 
-                $xml->orders->children()->order->current_state = '2';
-                $updatedXml = $webService->edit([
-                  'resource' => 'orders',
-                  'id' => $id,
-                  'putXml' => $xml->asXML()
-                ]);
+              //   // ]);
 
-                return ['Pago exitoso'];
+              //   // $xml->orders->children()->order->current_state = '2';
+              //   // $updatedXml = $webService->edit([
+              //   //   'resource' => 'orders',
+              //   //   'id' => $id,
+              //   //   'putXml' => $xml->asXML()
+              //   // ]);
 
-              } else {
+              //   // return ['Pago exitoso'];
 
-                return ['Error al procesar el pago'];
-                  //lo que quieras que haga si no es positivo
+              // } else {
 
-              }
+              //   return ['Error al procesar el pago'];
+              //     //lo que quieras que haga si no es positivo
+
+              // }
           }
 
           catch(Exception $e){
@@ -371,7 +401,7 @@ class FacturacionController extends Controller
         curl_close($curl3);
 
         $json3 = json_decode($response3, true);
-        $total_envio = 4.84 /** count($json["orders"][0]["associations"]["order_rows"])*/;
+        $total_envio = $json["orders"][0]["total_shipping"];
 
         return [$json, $json2, $json3, $total_envio];
 
@@ -379,10 +409,9 @@ class FacturacionController extends Controller
 
     public function repetir_pedido(Request $request)
     {
-
+      
       $webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
-      $xml = $webService->get(['url' => 'https://www.wonduu.com/api/orders?schema=blank']);
-     
+      $xml = $webService->get(['url' => 'https://www.wonduu.com/api/carts?schema=blank']);
       $id_carrito = $request->id;
       $curl = curl_init();
 
@@ -401,72 +430,94 @@ class FacturacionController extends Controller
       ));
 
       $response = json_decode(curl_exec($curl), true);
+      $ids_productos = [];
+
+      curl_close($curl);
+
+      for ($i = 0; $i < count($response["carts"][0]["associations"]["cart_rows"]); $i++) { 
         
-      for ($y = 0; $y < count($response["carts"][0]["associations"]["cart_rows"]); $y++) { 
-        
-        $curl2 = curl_init();
+        if ($response["carts"][0]["associations"]["cart_rows"][$i]["id_product"] == '0') {
+          
+          array_splice($response["carts"][0]["associations"]["cart_rows"], $i, 1);
 
-        curl_setopt_array($curl2, array(
-          CURLOPT_URL => 'https://www.wonduu.com/api/combinations?filter[id_product]=' . strval($response["carts"][0]["associations"]["cart_rows"][$y]["id_product"]) . '&display=full&output_format=JSON',
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 0,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'GET',
-          CURLOPT_HTTPHEADER => array(
-            'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
-            ),
-        ));
+        }
 
-        $response3 = curl_exec($curl2);
-        $json2 = json_decode($response3, true);
+      }
 
-        curl_close($curl2);
+      for ($y = 0; $y < count($response["carts"][0]["associations"]["cart_rows"]); $y++) {
 
-        for ($x = 0; $x < count($json2["combinations"]); $x++) { 
+        array_push($ids_productos, $response["carts"][0]["associations"]["cart_rows"][$y]["id_product"]);
 
-          if (floatval($json2["combinations"][$x]["quantity"]) < floatval($response["carts"][0]["associations"]["cart_rows"][$y]["quantity"])) {
-              
-            $curl_nombre = curl_init();
+      }
 
-            curl_setopt_array($curl_nombre, array(
-              CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=' . strval($response["carts"][0]["associations"]["cart_rows"][$y]["id_product"]) . '&display=[name]&output_format=JSON',
-              CURLOPT_RETURNTRANSFER => true,
-              CURLOPT_ENCODING => '',
-              CURLOPT_MAXREDIRS => 10,
-              CURLOPT_TIMEOUT => 0,
-              CURLOPT_FOLLOWLOCATION => true,
-              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-              CURLOPT_CUSTOMREQUEST => 'GET',
-              CURLOPT_HTTPHEADER => array(
-                'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
-                ),
-            ));
+      $ids_productos_imploded = implode('|', $ids_productos);
+      $curl_nombre = curl_init();
 
-            $response_nombre = curl_exec($curl_nombre);
-            $json_nombre = json_decode($response_nombre, true);
+      curl_setopt_array($curl_nombre, array(
+        CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=[' . $ids_productos_imploded . ']&display=[id,name,id_default_combination,quantity]&output_format=JSON&filter[available_for_order]=1',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 0,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => 'GET',
+        CURLOPT_HTTPHEADER => array(
+          'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
+          ),
+      ));
 
-            curl_close($curl_nombre);
+      $response_nombre = curl_exec($curl_nombre);
+      $json_nombre = json_decode($response_nombre, true);
 
-            return ['Cantidad del producto ' . $json_nombre["products"][0]["name"] . ' excedida, disponibles: ' . $json2["combinations"][$x]["quantity"]];
+      curl_close($curl_nombre);
 
-          } else {
+      $curl2 = curl_init();
 
-            $xml->order->id_customer = $response["carts"][0]["id_customer"];
-            $xml->order->id_address_delivery = $response["carts"][0]["id_address_delivery"];
-            $xml->order->id_address_invoice = $response["carts"][0]["id_address_invoice"];
-            $xml->order->id_currency = 1;
-            $xml->order->id_lang = 1;
+      curl_setopt_array($curl2, array(
+        CURLOPT_URL => 'https://www.wonduu.com/api/combinations?filter[id_product]=[' . $ids_productos_imploded . ']&display=full&output_format=JSON',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 0,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => 'GET',
+        CURLOPT_HTTPHEADER => array(
+          'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
+          ),
+      ));
 
-            for ($z = 0; $z < count($response["carts"][0]["associations"]["cart_rows"]); $z++) { 
-              
-              $xml->order->associations->order_row->cart_row[$z]->id_product = $response["carts"][0]["associations"]["cart_rows"][$z]["id_product"];
-              $xml->order->associations->order_row->cart_row[$z]->quantity = $response["carts"][0]["associations"]["cart_rows"][$z]["quantity"];
-              $xml->order->associations->order_row->cart_row[$z]->id_product_attribute = $json2["combinations"][$x]["id"];
+      $response3 = curl_exec($curl2);
+      $json2 = json_decode($response3, true);
+
+      curl_close($curl2);
+
+      for ($i = 0; $i < count($json_nombre["products"]); $i++) { 
+
+        if (array_key_exists('combinations', $json2)) {
+
+          for ($y = 0; $y < count($json2["combinations"]); $y++) { 
+
+            if ($json2["combinations"][$y]["id"] == $response["carts"][0]["associations"]["cart_rows"][$i]["id_product_attribute"]) {
+
+              if (floatval($json2["combinations"][$y]["quantity"]) < floatval($response["carts"][0]["associations"]["cart_rows"][$i]["quantity"])) {
+
+                return ['La cantidad del producto: ' . $json_nombre["products"][$i]["name"] . ' ha sido excedida'];
+
+              }
 
             }
+
+          }
+          
+        } else {
+
+          $contador = 0;
+
+          if (floatval($json_nombre["products"][$i]["quantity"]) < floatval($response["carts"][0]["associations"]["cart_rows"][$i]["quantity"])) {
+            
+            return ['La cantidad del producto: ' . $json_nombre["products"][$i]["name"] . ' ha sido excedida'];
 
           }
 
@@ -474,18 +525,33 @@ class FacturacionController extends Controller
 
       }
 
+      $xml->cart->id_customer = $response["carts"][0]["id_customer"];
+      $xml->cart->id_address_delivery = $response["carts"][0]["id_address_delivery"];
+      $xml->cart->id_address_invoice = $response["carts"][0]["id_address_delivery"];
+      $xml->cart->id_currency = 1;
+      $xml->cart->id_lang = 1;
+      $xml->cart->id_carrier = 28;
+      $xml->cart->shipping_cost = '4.84000';
+
+      for ($i = 0; $i < count($response["carts"][0]["associations"]["cart_rows"]); $i++) { 
+        
+        $xml->cart->associations->cart_rows->cart_row[$i]->id_product = $response["carts"][0]["associations"]["cart_rows"][$i]["id_product"];
+        $xml->cart->associations->cart_rows->cart_row[$i]->quantity = $response["carts"][0]["associations"]["cart_rows"][$i]["quantity"];
+        $xml->cart->associations->cart_rows->cart_row[$i]->id_product_attribute = $response["carts"][0]["associations"]["cart_rows"][$i]["id_product_attribute"];
+
+      }
+
       $createdXml = $webService->add([
 
-         'resource' => 'orders',
+         'resource' => 'carts',
          'postXml' => $xml->asXML(),
 
       ]);
 
-      $newOrderFields = $createdXml->cart->children();
-      $respuesta = 'Pedido efectuado satisfactoriamente';
-      $newOrderFields = $newCartsFields->id;
+      $newCartsFields = $createdXml->cart->children();
+      $newCartsFields = $newCartsFields->id;
 
-      return [$respuesta, $newOrderFields];
+      return [$newCartsFields];
 
     }
 
@@ -495,7 +561,7 @@ class FacturacionController extends Controller
       $curl = curl_init();
 
       curl_setopt_array($curl, array(
-        CURLOPT_URL => 'https://www.wonduu.com/api/carts?filter[id_customer]=' . $request->id . '&display=full&output_format=JSON',
+        CURLOPT_URL => 'https://www.wonduu.com/api/carts?filter[id]=' . $request->id . '&display=full&output_format=JSON',
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_ENCODING => '',
         CURLOPT_MAXREDIRS => 10,
@@ -510,9 +576,13 @@ class FacturacionController extends Controller
 
       $response = curl_exec($curl);
       $json = json_decode($response, true);
-      $indice = count($json["carts"]) - 1;
-      $envio = 4.84;
-      $total = floatval($envio) + floatval($json["carts"][$indice]["order_total"]);
+      $total = floatval($json["carts"][0]["order_total"]);
+
+      if ($total == 0) {
+        
+        $total = 4.84;
+
+      }
 
       return [$total];
 

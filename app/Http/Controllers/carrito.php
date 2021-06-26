@@ -44,7 +44,7 @@ class carrito extends Controller
 				$curl_productos = curl_init();
 
 				curl_setopt_array($curl_productos, array(
-				  CURLOPT_URL =>'https://www.wonduu.com/api/products?filter[id]=' . $request->id . '&display=[id_default_combination]&output_format=JSON',
+				  CURLOPT_URL =>'https://www.wonduu.com/api/products?filter[id]=' . $request->id . '&display=[id_default_combination]&output_format=JSON&filter[available_for_order]=1',
 				  CURLOPT_RETURNTRANSFER => true,
 				  CURLOPT_ENCODING => '',
 				  CURLOPT_MAXREDIRS => 10,
@@ -271,6 +271,7 @@ class carrito extends Controller
 			        $xml->cart->id_currency = 1;
 			        $xml->cart->id_lang = 1;
 			        $xml->cart->id_carrier = 28;
+			        $xml->cart->shipping_cost = '4.84000';
 			        $xml->cart->associations->cart_rows->cart_row->id_product = $request->id;
 			        $xml->cart->associations->cart_rows->cart_row->quantity = $request->quantity;
 					$xml->cart->associations->cart_rows->cart_row->id_product_attribute = $id_combinacion;
@@ -398,7 +399,7 @@ class carrito extends Controller
     public function validar_combinacion_3($i, $json, $json2, $request, $id_combinacion_defecto)
     {	
 			
-		if (strval($id_combinacion_defecto) == strval($json2["combinations"][$i]["id"])) {
+		if (strval($id_combinacion_defecto) === strval($json2["combinations"][$i]["id"])) {
 			
 			if (floatval($json2["combinations"][$i]["quantity"]) < floatval($request->quantity)) {
 					
@@ -539,7 +540,7 @@ class carrito extends Controller
 					$filtro = implode('|', $ids);
 
 					curl_setopt_array($curl2, array(
-					  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=[' . $filtro . ']&display=full&output_format=JSON',
+					  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=[' . $filtro . ']&filter[available_for_order]=1&display=full&output_format=JSON',
 					  CURLOPT_RETURNTRANSFER => true,
 					  CURLOPT_ENCODING => '',
 					  CURLOPT_MAXREDIRS => 10,
@@ -781,7 +782,7 @@ class carrito extends Controller
 			$curl_cantidad = curl_init();
 
 			curl_setopt_array($curl_cantidad, array(
-			  CURLOPT_URL => 'https://www.wonduu.com/api/products?display=[name,quantity,id_default_combination]&filter[id]=' . $request->id . '&output_format=JSON',
+			  CURLOPT_URL => 'https://www.wonduu.com/api/products?display=[name,quantity,id_default_combination]&filter[id]=' . $request->id . '&output_format=JSON&filter[available_for_order]=1',
 			  CURLOPT_RETURNTRANSFER => true,
 			  CURLOPT_ENCODING => '',
 			  CURLOPT_MAXREDIRS => 10,
