@@ -105,4 +105,4 @@ Route::post('repetir_pedido', [FacturacionController::class, 'repetir_pedido']);
 Route::post('total_orden', [FacturacionController::class, 'total_orden']);
 
 
-Route::get('pagar', [FacturacionController::class, 'index']);
+Route::get('pagar', [FacturacionController::class, 'index']); 
