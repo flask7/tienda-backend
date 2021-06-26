@@ -9,17 +9,13 @@ use Ssheduardo\Redsys\Facades\Redsys;
 
 class FacturacionController extends Controller
 {
-<<<<<<< HEAD
     public function completado(){
       return view('completed');
     }
-=======
->>>>>>> main
     public function orden_pago(Request $request){
 
       if ($request->id_carrito) {
 
-<<<<<<< HEAD
         $key = 'JrcKh4xhnFPm2s/z/3YOVHtEzApFZ6Oq';
         $parameters = Redsys::getMerchantParameters($request->input('Ds_MerchantParameters'));
         $DsResponse = $parameters["Ds_Response"];
@@ -34,8 +30,6 @@ class FacturacionController extends Controller
 
         }
 
-=======
->>>>>>> main
         $curlx = curl_init();
 
         curl_setopt_array($curlx, array(
@@ -263,7 +257,6 @@ class FacturacionController extends Controller
 
     public function index(Request $request)
       {
-<<<<<<< HEAD
 
         $args = "id_carrito=".$request->id_carrito."&delivery=".$request->delivery."&id_direccion=".$request->id_direccion."&pago=".$request->pago."&id_cliente=".$request->id_cliente;
           try{
@@ -290,32 +283,11 @@ class FacturacionController extends Controller
               // Redsys::setCVV2('123'); //CVV2 de la tarjeta
 
               Redsys::setProductDescription('Compras por la aplicación');
-=======
-          try{
-
-              $key = config('redsys.key');
-
-              Redsys::setAmount(rand($request->monto));
-              Redsys::setOrder(time());
-              Redsys::setMerchantcode('346311483'); //Reemplazar por el código que proporciona el banco
-              Redsys::setCurrency('1');
-              Redsys::setTransactiontype('0');
-              Redsys::setTerminal('1');
-              Redsys::setMethod('T'); //Solo pago con tarjeta, no mostramos iupay
-              Redsys::setNotification(config('redsys.url_notification')); //Url de notificacion
-              Redsys::setUrlOk(config('redsys.url_ok')); //Url OK
-              Redsys::setUrlKo(config('redsys.url_ko')); //Url KO
-              Redsys::setVersion('HMAC_SHA256_V1');
-              Redsys::setTradeName('Wonduu');
-              Redsys::setTitular('Grupo K2');
-              Redsys::setProductDescription('Compras por aplicación');
->>>>>>> main
               Redsys::setEnviroment('live'); //Entorno test
 
               $signature = Redsys::generateMerchantSignature($key);
               Redsys::setMerchantSignature($signature);
 
-<<<<<<< HEAD
               return Redsys::executeRedirection();
               // $parameters = Redsys::getMerchantParameters($request->input('Ds_MerchantParameters'));
 
@@ -350,41 +322,6 @@ class FacturacionController extends Controller
               //     //lo que quieras que haga si no es positivo
 
               // }
-=======
-              $form = Redsys::createForm();
-              $parameters = Redsys::getMerchantParameters($request->input('Ds_MerchantParameters'));
-              $DsResponse = $parameters["Ds_Response"];
-              $DsResponse += 0;
-
-              if (Redsys::check($key, $request->input()) && $DsResponse <= 99) {
-
-                  // lo que quieras que haya si es positiva la confirmación de redsys
-
-                $webService = new PrestaShopWebservice('https://www.wonduu.com', '4E5IDBTRSDFPGKEINT8T16Y5FMMT3CSP', false);
-                $id = $request->id;
-                $xml = $webService->get([
-
-                   'resource' => 'orders',
-                   'id' => intval($id),
-
-                ]);
-
-                $xml->orders->children()->order->current_state = '2';
-                $updatedXml = $webService->edit([
-                  'resource' => 'orders',
-                  'id' => $id,
-                  'putXml' => $xml->asXML()
-                ]);
-
-                return ['Pago exitoso'];
-
-              } else {
-
-                return ['Error al procesar el pago'];
-                  //lo que quieras que haga si no es positivo
-
-              }
->>>>>>> main
           }
 
           catch(Exception $e){
