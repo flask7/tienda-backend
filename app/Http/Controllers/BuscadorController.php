@@ -17,7 +17,7 @@ class BuscadorController extends Controller
     	$buscar = [
 		    'resource' => 'products',
 		    'filter[name]' => '[' . $busqueda . ']%',
-            'filter[available_for_order]' => 1,
+            'filter[active]' => 1,
 		    'display'  => '[name,id,id_category_default]',
 		    'limit' => '3'
 		];

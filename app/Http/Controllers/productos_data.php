@@ -17,7 +17,8 @@ class productos_data extends Controller
 	   	$data = ['sub_categorias' => ['nombre' => [], 'id' => [], 'productos' => []]];
 
 		curl_setopt_array($curl, array(
-		  CURLOPT_URL => 'https://www.wonduu.com/api/categories?filter[id_parent]=' . $categoria . '&display=[id,name]&output_format=JSON',
+		  CURLOPT_URL => 'https://www.wonduu.com/api/categories?filter[id_parent]=' . $categoria . '&filter[active]=1&display=full&output_format=JSON',
+		  // CURLOPT_URL => 'https://www.wonduu.com/api/categories?filter[id_parent]=' . $categoria . '&display=[id,name]&output_format=JSON',
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => '',
 		  CURLOPT_MAXREDIRS => 10,
@@ -33,25 +34,56 @@ class productos_data extends Controller
 		$response = curl_exec($curl);
 		$json = json_decode($response, true);
 
-		curl_close($curl);
+		// return $json;
+
+		//
+		$productos_ids = [];
+		$pr_c_ids = [];
+		for ($j=0; $j < count($json['categories']); $j++) { 
+			$ids = [];
+			$contador = 0;
+			if (isset($json['categories'][$j]['associations'])) {
+				if (isset($json['categories'][$j]['associations']['products'])) {
+
+					for ($i = 0; $i < count($json['categories'][$j]['associations']['products']); $i++) {
+
+						$ids[] = $json['categories'][$j]['associations']['products'][$i]['id'];
+						$productos_ids[] = $json['categories'][$j]['associations']['products'][$i]['id'];
+						$contador++;
+						
+						if ($contador == 9) {
+							
+							break;
+						}
+
+					}
+				}
+			}
+			array_push($pr_c_ids, $ids);
+		}
+
+		$productos_imploded = implode('|', $productos_ids);
+		//
 
 	   	if (array_key_exists('categories', $json)) {
 
-	   		$categorias = [];
+	   		// $categorias = [];
 
 	   		for ($i = 0; $i < count($json['categories']); $i++) {
 
-	   			array_push($categorias, $json['categories'][$i]['id']);
+	   			// array_push($categorias, $json['categories'][$i]['id']);
 	   			array_push($data['sub_categorias']['id'], $json['categories'][$i]['id']);
 				array_push($data['sub_categorias']['nombre'], $json['categories'][$i]['name']);
 
 	   		}
 
-	   		$categorias_imploded = implode('|', $categorias);
+	   		// $categorias_imploded = implode('|', $categorias);
+
 			$curl2 = curl_init();
 
 	   		curl_setopt_array($curl2, array(
-			  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id_category_default]=[' . $categorias_imploded . ']&display=[id,price,name,id_default_image,id_category_default,id_tax_rules_group]&output_format=JSON&filter[available_for_order]=1',
+			  // CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id_category_default]=[' . $categorias_imploded . '&display=[id,price,name,id_default_image,id_category_default,id_tax_rules_group]&output_format=JSON&filter[active]=1',
+			  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=[' . $productos_imploded . ']&display=[id,price,name,id_default_image,id_category_default,id_tax_rules_group]&output_format=JSON&filter[active]=1',
 			  CURLOPT_RETURNTRANSFER => true,
 			  CURLOPT_ENCODING => '',
 			  CURLOPT_MAXREDIRS => 10,
@@ -133,9 +165,17 @@ class productos_data extends Controller
 
 				$porcentajes_impuestos = [];
 
-				for ($x = 0; $x < count($json_impuestos['tax_rules']); $x++) { 
+				if ($json_impuestos != null) {
 					
-					array_push($porcentajes_impuestos, $json_impuestos["tax_rules"][$x]["id_tax"]);
+					if (array_key_exists('tax_rules', $json_impuestos)) {
+					
+						for ($x = 0; $x < count($json_impuestos['tax_rules']); $x++) { 
+						
+							array_push($porcentajes_impuestos, $json_impuestos["tax_rules"][$x]["id_tax"]);
+
+						}
+
+					}
 
 				}
 
@@ -168,28 +208,44 @@ class productos_data extends Controller
 					$precio_base = floatval($json2["products"][$x]['price']);
 					$id_impuesto = 0;
 
-					for ($y = 0; $y < count($json_impuestos["tax_rules"]); $y++) { 
+					if ($json_impuestos != null) {
+					
+						if (array_key_exists('tax_rules', $json_impuestos)) {
 
-						if ($json_impuestos["tax_rules"][$y]["id_tax_rules_group"] == $json2["products"][$x]["id_tax_rules_group"]) {
+							for ($y = 0; $y < count($json_impuestos["tax_rules"]); $y++) { 
 
-							$id_impuesto = $json_impuestos["tax_rules"][$y]["id_tax"];
+								if ($json_impuestos["tax_rules"][$y]["id_tax_rules_group"] == $json2["products"][$x]["id_tax_rules_group"]) {
 
-							break;
+									$id_impuesto = $json_impuestos["tax_rules"][$y]["id_tax"];
+
+									break;
+
+								}
+
+							}
 
 						}
 
 					}
 
-					for ($a = 0; $a < count($json_porcentaje_impuestos["taxes"]); $a++) {
+					if ($json_porcentaje_impuestos != null) {
+					
+						if (array_key_exists('taxes', $json_porcentaje_impuestos)) {
 
-						if ($json_porcentaje_impuestos["taxes"][$a]["id"] == $id_impuesto) {
+							for ($a = 0; $a < count($json_porcentaje_impuestos["taxes"]); $a++) {
 
-							$impuestos = floatval($json_porcentaje_impuestos["taxes"][$a]['rate'])/100;
+								if ($json_porcentaje_impuestos["taxes"][$a]["id"] == $id_impuesto) {
 
-							break;
+									$impuestos = floatval($json_porcentaje_impuestos["taxes"][$a]['rate'])/100;
+
+									break;
+
+								}
+
+							}
 
 						}
-
+						
 					}
 
 					$porcentaje_impuesto = ($precio_base * $impuestos) + $precio_base;
@@ -228,29 +284,45 @@ class productos_data extends Controller
 
 				}
 
-				for ($x = 0; $x < count($json['categories']); $x++) { 
-				
+				// return $json2["products"];
+
+				for ($x = 0; $x < count($json['categories']); $x++) {
+
 					$contador = 0;
 					$array_productos = ["products" => []];
 
-					for ($y = 0; $y < count($json2["products"]); $y++) { 
+
+					for ($y = 0; $y < count($json2["products"]); $y++) {
+
+						foreach ($pr_c_ids[$x] as $key => $value) {
+								
+							if ($value == $json2["products"][$y]["id"]) {
+								array_push($array_productos['products'], $json2['products'][$y]);	
+							}
+							// if ($key == 2) {
+							// 	break;
+							// }
+
+						}
 					
-						if ($json['categories'][$x]['id'] == $json2["products"][$y]["id_category_default"]) {
+						// if ($json['categories'][$x]['id'] == $json2["products"][$y]["id_category_default"]) {
 
-							array_push($array_productos['products'], $json2['products'][$y]);
-							$contador++;
+						// 	array_push($array_productos['products'], $json2['products'][$y]);
+						// 	$contador++;
 
-						}
+						// }
 
-						if ($contador == 3) {
+						// if ($contador == 3) {
 
-							array_push($data['sub_categorias']['productos'], $array_productos);
-							$contador = 0;
-							break;
+						// 	// array_push($data['sub_categorias']['productos'], $array_productos);
+						// 	// $contador = 0;
+						// 	break;
 
-						}
+						// }
 
 					}
+
+					array_push($data['sub_categorias']['productos'], $array_productos);
 
 				}
 

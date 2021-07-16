@@ -14,7 +14,8 @@ class RelacionadosController extends Controller
     	$curl = curl_init();
 
 		curl_setopt_array($curl, array(
-		  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id_category_default]=' . $categoria . '&display=full&limit=4&output_format=JSON&filter[available_for_order]=1',
+		  // CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id_category_default]=' . $categoria . '&display=full&limit=4&output_format=JSON&filter[available_for_order]=1',
+		  CURLOPT_URL => 'https://www.wonduu.com/api/categories/' . $categoria.'&output_format=JSON',
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => '',
 		  CURLOPT_MAXREDIRS => 10,
@@ -31,6 +32,55 @@ class RelacionadosController extends Controller
 		$json = json_decode($response, true);
 
 		curl_close($curl);
+
+		$pr = $json['category']['associations']['products'];
+		$max = count($pr);
+
+		$rng = [];
+
+		function getRandom($max,$rng)
+		{
+			$number = rand(0,$max);
+			foreach ($rng as $key => $v) {
+				if ($v == $number) {
+					return getRandom($max,$rng);
+				}
+			}
+
+			return $number;
+		}
+
+		for ($i = 0; $i < 9; $i++)
+		{
+			$rng[] = getRandom($max,$rng);
+		}
+
+		$productos = [];
+
+		foreach ($rng as $key => $value) {
+			$productos[] = $pr[$value]['id'];
+		}
+
+		$curl_1 = curl_init();
+
+		curl_setopt_array($curl_1, array(
+		  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=[' . implode('|',$productos) . ']&display=full&&output_format=JSON&filter[active]=1',
+		  CURLOPT_RETURNTRANSFER => true,
+		  CURLOPT_ENCODING => '',
+		  CURLOPT_MAXREDIRS => 10,
+		  CURLOPT_TIMEOUT => 0,
+		  CURLOPT_FOLLOWLOCATION => true,
+		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+		  CURLOPT_CUSTOMREQUEST => 'GET',
+		  CURLOPT_HTTPHEADER => array(
+		    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A'
+		  ),
+		));
+
+		$response = curl_exec($curl_1);
+		$json = json_decode($response, true);
+
+		curl_close($curl_1);
 
 		$datos = [];
 

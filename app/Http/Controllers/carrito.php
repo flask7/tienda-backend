@@ -10,6 +10,8 @@ class carrito extends Controller
 {
     public function add_carrito(Request $request) {
 
+    	// return $request->all();
+
 		if (!$request->id || !$request->quantity) {
 
 			return ['Error en envío de los datos'];
@@ -88,6 +90,8 @@ class carrito extends Controller
 					$combinations = [];
 					$v = null;
 					$cantidad_comb = null;
+
+					// return $json2;
 
 					if ($request->opciones) {
 
@@ -307,6 +311,7 @@ class carrito extends Controller
     	for ($i = 0; $i < count($json2["combinations"]); $i++) { 
 
 			$opts = $json2["combinations"][$i]["associations"]["product_option_values"];
+			$opciones = $request->opciones;
 
 			if (count($opts) == count($request->opciones)) {
 
@@ -314,7 +319,10 @@ class carrito extends Controller
 					
 					array_push($combinations, $opts[$y]["id"]);
 
-					if ($combinations === $request->opciones) {
+					sort($combinations);
+					sort($opciones);
+
+					if ($combinations === $opciones) {
 					 	
 						$v = $json2["combinations"][$i]["id"];
 						$cantidad_comb = $json2["combinations"][$i]["quantity"];
@@ -323,7 +331,7 @@ class carrito extends Controller
 
 					} 
 
-					if (count($combinations) == count($request->opciones)) {
+					if (count($combinations) == count($opciones)) {
 
 						$combinations = [];
 
@@ -484,6 +492,7 @@ class carrito extends Controller
 
 		$id = $request->id;
 		$curl = curl_init();
+		$combinations = null;
 
 		curl_setopt_array($curl, array(
 		  CURLOPT_URL => 'https://www.wonduu.com/api/carts?filter[id_customer]=' . $id . '&display=full&output_format=JSON',
@@ -503,6 +512,72 @@ class carrito extends Controller
 		$ids = [];
 
 		curl_close($curl);
+
+		/**/
+
+		if (isset($request->product)) {
+			
+			$product = curl_init();
+
+			curl_setopt_array($product, array(
+			  CURLOPT_URL => 'https://www.wonduu.com/api/combinations?filter[id_product]=' . $request->product . '&display=full&output_format=JSON',
+			  CURLOPT_RETURNTRANSFER => true,
+			  CURLOPT_ENCODING => '',
+			  CURLOPT_MAXREDIRS => 10,
+			  CURLOPT_TIMEOUT => 0,
+			  CURLOPT_FOLLOWLOCATION => true,
+			  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			  CURLOPT_CUSTOMREQUEST => 'GET',
+			  CURLOPT_HTTPHEADER => array(
+			    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
+			    ),
+			));
+
+			$combinations = json_decode(curl_exec($product), true);
+
+			curl_close($product);
+		}else{
+
+			$id_carrito = count($response['carts']) - 1;
+			$ids_c = [];
+
+			if (array_key_exists('associations', $response['carts'][$id_carrito])) {
+				
+				if (array_key_exists('cart_rows', $response['carts'][$id_carrito]['associations'])) {
+					
+					for ($i = 0; $i < count($response["carts"][$id_carrito]['associations']['cart_rows']); $i++) { 
+
+						array_push($ids_c, $response['carts'][$id_carrito]['associations']['cart_rows'][$i]['id_product_attribute']);
+
+					}
+
+				}
+				
+			}
+
+
+			$product = curl_init();
+
+			curl_setopt_array($product, array(
+			  CURLOPT_URL => 'https://www.wonduu.com/api/combinations?filter[id]=[' . implode('|',$ids_c) . ']&display=full&output_format=JSON',
+			  CURLOPT_RETURNTRANSFER => true,
+			  CURLOPT_ENCODING => '',
+			  CURLOPT_MAXREDIRS => 10,
+			  CURLOPT_TIMEOUT => 0,
+			  CURLOPT_FOLLOWLOCATION => true,
+			  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+			  CURLOPT_CUSTOMREQUEST => 'GET',
+			  CURLOPT_HTTPHEADER => array(
+			    'Authorization: Basic NEU1SURCVFJTREZQR0tFSU5UOFQxNlk1Rk1NVDNDU1A',
+			    ),
+			));
+
+			$combinations = json_decode(curl_exec($product), true);
+
+			curl_close($product);
+		}
+
+		/**/
 
 		if ($response != null) {
 
@@ -608,7 +683,7 @@ class carrito extends Controller
 
 						if (array_key_exists("product_option_values", $jsonx)) {
 						
-							for ($i = 0; $i < count($jsonx["product_option_values"]); $i++) { 
+							for ($i = 0; $i < count($jsonx["product_option_values"]); $i++) {
 							
 								array_push($valor_atributos, $jsonx['product_option_values'][$i]['id_attribute_group']);
 
@@ -637,7 +712,7 @@ class carrito extends Controller
 
 						curl_close($curl3);
 
-						return [$response, $response2, $response3, $jsonx];
+						return [$response, $response2, $response3, $jsonx, $combinations];
 
 					} else {
 

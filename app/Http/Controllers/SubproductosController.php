@@ -56,7 +56,7 @@ class SubproductosController extends Controller
 		$datos = ['id_producto' => [], 'precio' => [], 'nombre' => [], 'imagen' => ['id_imagen' => [], 'base64' => []], 'paginas' => count($productos_ids)/30];
 
 		curl_setopt_array($curl, array(
-		  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=[' . $productos_imploded . ']&&filter[available_for_order]=1&display=[id,price,name,id_default_image,id_tax_rules_group]&output_format=JSON&limit=' . $pagina_actual . ',30',
+		  CURLOPT_URL => 'https://www.wonduu.com/api/products?filter[id]=[' . $productos_imploded . ']&filter[active]=1&display=[id,price,name,id_default_image,id_tax_rules_group]&output_format=JSON&limit=' . $pagina_actual . ',30',
 		  CURLOPT_RETURNTRANSFER => true,
 		  CURLOPT_ENCODING => '',
 		  CURLOPT_MAXREDIRS => 10,
